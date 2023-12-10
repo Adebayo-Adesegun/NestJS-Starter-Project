@@ -1,7 +1,8 @@
 import 'dotenv/config';
-import { parseBoolean } from 'src/utility/utility.core';
+import { User } from 'src/core/entities/user.entity';
 import { DataSourceOptions } from 'typeorm';
 
+const sslOption: boolean = process.env.DATABASE_SSL === 'true';
 const databaseConfig: DataSourceOptions = {
   type: 'postgres',
   host: process.env.DATABASE_HOST,
@@ -9,8 +10,8 @@ const databaseConfig: DataSourceOptions = {
   username: process.env.DATABASE_USER,
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
-  ssl: parseBoolean(process.env.DATABASE_SSL || false),
-  entities: [],
+  ssl: sslOption,
+  entities: [User],
   migrations: [],
   subscribers: [__dirname + '/**/*.subscriber{.ts,.js}'],
   synchronize: false, // must always be false in production

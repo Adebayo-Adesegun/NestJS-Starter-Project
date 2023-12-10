@@ -13,20 +13,20 @@ class EnvironmentVariables {
   @IsNotEmpty()
   ALLOWED_ORIGINS: string;
 
-  //   @IsNotEmpty()
-  //   DATABASE_HOST: string;
+  @IsNotEmpty()
+  DATABASE_HOST: string;
 
-  //   @IsNotEmpty()
-  //   DATABASE_PORT: number;
+  @IsNotEmpty()
+  DATABASE_PORT: number;
 
-  //   @IsNotEmpty()
-  //   DATABASE_USER: string;
+  @IsNotEmpty()
+  DATABASE_USER: string;
 
-  //   @IsNotEmpty()
-  //   DATABASE_PASSWORD: string;
+  @IsNotEmpty()
+  DATABASE_PASSWORD: string;
 
-  //   @IsNotEmpty()
-  //   DATABASE_NAME: string;
+  @IsNotEmpty()
+  DATABASE_NAME: string;
 
   //   @IsNotEmpty()
   //   JWT_CONSTANT: string;
