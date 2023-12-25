@@ -1,23 +1,40 @@
-import { Controller, Request, Post, UseGuards, Get } from '@nestjs/common';
-import { LocalAuthGuard } from './local-auth.guard';
+import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt-auth.guard';
 import { Public } from './pulic-access.guard';
+import { RegisterDto } from 'src/user/dto/register.dto';
+import { UserService } from 'src/user/user.service';
+import { ApiResponse } from 'src/core/interfaces/api-response.interface';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private userService: UserService,
+  ) {}
 
-  @UseGuards(LocalAuthGuard)
-  @Post('auth/login')
-  async login(@Request() req) {
-    return this.authService.login(req.user);
+  @Public()
+  @Post('register')
+  async register(
+    @Body() registerDto: RegisterDto,
+  ): Promise<ApiResponse<RegisterDto>> {
+    const [success, message, user] = await this.userService.create(registerDto);
+    if (success) {
+      return {
+        statusCode: 201,
+        message: [message],
+        data: user,
+      };
+    }
+    throw new BadRequestException({
+      message: [message],
+      statusCode: 400,
+    });
   }
 
   // @UseGuards(JwtAuthGuard)
   // @Public()
-  @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
-  }
+  // @Get('profile')
+  // getProfile(@Request() req) {
+  //   return req.user;
+  // }
 }

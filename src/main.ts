@@ -20,7 +20,7 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
-      errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
     }),
   );
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
