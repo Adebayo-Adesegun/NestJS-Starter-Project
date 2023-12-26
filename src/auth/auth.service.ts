@@ -18,7 +18,8 @@ export class AuthService {
       );
     }
 
-    if (!(await user.checkPassword(password))) {
+    const isPasswordValid = await user.checkPassword(password);
+    if (!isPasswordValid) {
       throw new UnauthorizedException(
         `401 Unauthorized: Authentication Failed.`,
       );
@@ -34,7 +35,7 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       isAdmin: user.isAdmin,
-      access_token: this.jwtService.sign(payload),
+      access_token: await this.jwtService.signAsync(payload),
     };
   }
 }
