@@ -15,6 +15,7 @@ export class UserRepositoryFake {
 
 let userService: UserService;
 let userRepository: Repository<User>;
+let user: User;
 
 beforeAll(async () => {
   const module: TestingModule = await Test.createTestingModule({
@@ -27,7 +28,14 @@ beforeAll(async () => {
       IsUserEmailAlreadyExist,
     ],
   }).compile();
-
+  user = {
+    id: 1,
+    email: 'adebayo.adesegun@mail.com',
+    password: 'password',
+    phoneNumber: '08136018029',
+    firstName: 'Adesegun',
+    lastName: 'Adebayo',
+  } as User;
   userService = module.get<UserService>(UserService);
   userRepository = module.get(getRepositoryToken(User));
 });
@@ -50,14 +58,7 @@ describe('create a user', () => {
 
     const userRespositoryFindOneSpy = jest
       .spyOn(userRepository, 'findOne')
-      .mockResolvedValue({
-        id: 1,
-        email: 'adebayo.adesegun@mail.com',
-        password: 'password',
-        phoneNumber: '08136018029',
-        firstName: 'Adesegun',
-        lastName: 'Adebayo',
-      } as User);
+      .mockResolvedValue(user);
 
     const [success, message] = await userService.create(registrationDto);
     expect(success).toBe(false);
@@ -84,6 +85,28 @@ describe('create a user', () => {
     expect(success).toBe(true);
     expect(message).toBe('User created successfully.');
     expect(user).toEqual(registrationDto);
+    userRespositoryFindOneSpy.mockReset();
+  });
+});
+
+describe('find a user', () => {
+  it('should find a user', async () => {
+    const userRespositoryFindOneSpy = jest
+      .spyOn(userRepository, 'findOne')
+      .mockResolvedValue(user);
+
+    const findUser = await userService.findOne({ where: { id: 1 } });
+    expect(findUser).toBeDefined();
+    userRespositoryFindOneSpy.mockReset();
+  });
+
+  it('should return null if user does not exist', async () => {
+    const userRespositoryFindOneSpy = jest
+      .spyOn(userRepository, 'findOne')
+      .mockResolvedValue(null);
+
+    const findUser = await userService.findOne({ where: { id: 1 } });
+    expect(findUser).toBeNull();
     userRespositoryFindOneSpy.mockReset();
   });
 });
