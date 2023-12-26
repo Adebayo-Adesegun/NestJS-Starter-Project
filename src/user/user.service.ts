@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/core/entities/user.entity';
+import { User } from '../core/entities/user.entity';
 import { FindOneOptions, Repository } from 'typeorm';
 import { RegisterDto } from './dto/register.dto';
 import { CountryCode, parsePhoneNumber } from 'libphonenumber-js';

@@ -7,7 +7,7 @@ import {
   MinLength,
   Validate,
 } from 'class-validator';
-import { IsUserEmailAlreadyExist } from 'src/user/validator/is-user-email-already-exist.validator';
+import { IsUserEmailAlreadyExist } from '../../user/validator/is-user-email-already-exist.validator';
 
 export class RegisterDto {
   @IsNotEmpty()
