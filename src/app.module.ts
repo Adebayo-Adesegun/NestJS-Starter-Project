@@ -4,6 +4,12 @@ import { validate } from './config/env.validation';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { UtilityModule } from './utility/utility.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './user/user.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { typeOrmAsyncConfig } from './config/typeorm-config';
 
 @Module({
   imports: [
@@ -12,9 +18,17 @@ import { UtilityModule } from './utility/utility.module';
       load: [config],
       validate,
     }),
+    TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     UtilityModule,
+    AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}
