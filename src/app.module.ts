@@ -7,7 +7,7 @@ import { UtilityModule } from './utility/utility.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './user/user.module';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { JwtAuthGuard } from './guards/jwt/jwt-auth.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmAsyncConfig } from './config/typeorm-config';
 

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
-import { LocalAuthGuard } from './auth/local-auth.guard';
-import { Public } from './auth/pulic-access.guard';
+import { LocalAuthGuard } from './guards/local/local-auth.guard';
+import { Public } from './guards/pulic-access.guard';
 import { AuthService } from './auth/auth.service';
 import { ApiResponse } from './core/interfaces/api-response.interface';
 
