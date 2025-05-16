@@ -1,6 +1,6 @@
 import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Public } from './pulic-access.guard';
+import { Public } from '../guards/pulic-access.guard';
 import { RegisterDto } from '../user/dto/register.dto';
 import { UserService } from '../user/user.service';
 import { ApiResponse } from '../core/interfaces/api-response.interface';

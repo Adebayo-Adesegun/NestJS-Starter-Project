@@ -1,14 +1,14 @@
-export interface ApiResponse<T> {
-  statusCode: number;
-  message: string[];
+export interface ApiBaseResponse<T> {
+  message: string;
   data?: T;
-  error?: string,
 }
 
-export interface ApiResponsePaginated<T> extends ApiResponse<T> {
+export interface ApiResponsePaginated<T> extends ApiBaseResponse<T> {
   meta: {
-    total: number;
-    limit: number;
-    offset: number;
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
   };
 }
