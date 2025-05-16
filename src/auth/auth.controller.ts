@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { Public } from '../guards/pulic-access.guard';
 import { RegisterDto } from '../user/dto/register.dto';
 import { UserService } from '../user/user.service';
-import { ApiResponse } from '../core/interfaces/api-response.interface';
+import { ApiBaseResponse } from '../core/interfaces/api-response.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -16,7 +16,7 @@ export class AuthController {
   @Post('register')
   async register(
     @Body() registerDto: RegisterDto,
-  ): Promise<ApiResponse<RegisterDto>> {
+  ): Promise<ApiBaseResponse<RegisterDto>> {
     const [success, message, user] = await this.userService.create(registerDto);
     if (success) {
       return {
