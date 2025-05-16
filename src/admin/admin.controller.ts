@@ -17,6 +17,7 @@ export class AdminController {
   async getPermissions(): Promise<ApiBaseResponse<Permission[]>> {
     const response = await this.adminService.getPermissions();
     return {
+      statusCode: 200,
       message: 'Permissions fetched successfully',
       data: response,
     };

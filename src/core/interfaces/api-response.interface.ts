@@ -1,5 +1,6 @@
 export interface ApiBaseResponse<T> {
-  message: string;
+  statusCode: number;
+  message: string | string[];
   data?: T;
 }
 

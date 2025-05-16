@@ -2,7 +2,7 @@ import { Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
 import { LocalAuthGuard } from './guards/local/local-auth.guard';
 import { Public } from './guards/pulic-access.guard';
 import { AuthService } from './auth/auth.service';
-import { ApiResponse } from './core/interfaces/api-response.interface';
+import { ApiBaseResponse } from './core/interfaces/api-response.interface';
 
 @Controller()
 export class AppController {
@@ -16,7 +16,7 @@ export class AppController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('auth/login')
-  async login(@Request() req): Promise<ApiResponse<any>> {
+  async login(@Request() req): Promise<ApiBaseResponse<any>> {
     const response = await this.authService.login(req.user);
     return {
       statusCode: 200,
