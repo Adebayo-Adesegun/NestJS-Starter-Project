@@ -28,6 +28,13 @@ beforeAll(async () => {
           signAsync: jest.fn(),
         },
       },
+      {
+        provide: 'RolesPermissionRepository',
+        useValue: {
+          find: jest.fn(),
+          save: jest.fn(),
+        },
+      },
     ],
   }).compile();
 
