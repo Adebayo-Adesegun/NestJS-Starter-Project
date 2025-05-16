@@ -60,6 +60,7 @@ describe('AdminController', () => {
       expect(result).toEqual({
         message: 'Permissions fetched successfully',
         data: mockPermissions,
+        statusCode: 200,
       });
       expect(adminService.getPermissions).toHaveBeenCalled();
     });
@@ -76,6 +77,7 @@ describe('AdminController', () => {
       expect(result).toEqual({
         message: 'Permissions fetched successfully',
         data: [],
+        statusCode: 200,
       });
       expect(adminService.getPermissions).toHaveBeenCalled();
     });
