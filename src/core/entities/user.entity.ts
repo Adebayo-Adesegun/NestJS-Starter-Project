@@ -1,7 +1,15 @@
 import * as bcrypt from 'bcrypt';
-import { BeforeInsert, BeforeUpdate, Column, Entity, Index } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  Index,
+  OneToOne,
+} from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Exclude } from 'class-transformer';
+import { UserRole } from './user-role.entity';
 
 @Entity({ name: 'user' })
 @Index(['firstName', 'lastName'])
@@ -17,6 +25,10 @@ export class User extends BaseEntity {
 
   @Column({ type: 'varchar', length: 50, nullable: true, unique: true })
   username: string;
+
+  @Index('email-idx')
+  @Column({ type: 'varchar', length: 255, unique: true })
+  email: string;
 
   @Column({ name: 'phone_number', type: 'varchar', length: 50, unique: true })
   phoneNumber: string;
@@ -37,9 +49,10 @@ export class User extends BaseEntity {
   })
   phoneNumberVerifiedAt: Date;
 
-  @Index('email-idx')
-  @Column({ type: 'varchar', length: 255, unique: true })
-  email: string;
+  @OneToOne(() => UserRole, (userRole) => userRole.user, {
+    onDelete: 'SET NULL',
+  })
+  userRole: UserRole;
 
   @Column({ type: 'boolean', name: 'is_email_verified', default: false })
   isEmailVerified: boolean;
