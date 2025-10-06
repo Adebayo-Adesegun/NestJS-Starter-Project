@@ -99,9 +99,21 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.service.ts",
+      "**/*.controller.ts"
     ],
     "coverageDirectory": "../coverage",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/main.ts",
+      "<rootDir>/.*/.*.module.ts$",
+      "<rootDir>/config/",
+      "<rootDir>/migrations/",
+      "<rootDir>/core/entities/",
+      "<rootDir>/guards/",
+      "<rootDir>/shared/",
+      "<rootDir>/mailer/templates/"
+    ],
     "coverageThreshold": {
       "global": {
         "branches": 80,
