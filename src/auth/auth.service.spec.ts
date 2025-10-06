@@ -3,12 +3,10 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { UnauthorizedException } from '@nestjs/common';
-import { User } from 'src/core/entities/user.entity';
 
 let authService: AuthService;
 let userServiceMock: UserService;
 let jwtServiceMock: JwtService;
-let user: User;
 
 beforeAll(async () => {
   const module: TestingModule = await Test.createTestingModule({
@@ -37,15 +35,6 @@ beforeAll(async () => {
       },
     ],
   }).compile();
-
-  user = {
-    id: 1,
-    email: 'daniel@mail.com',
-    password: 'password',
-    firstName: 'Daniel',
-    lastName: 'Adeyemi',
-    phoneNumber: '08136018029',
-  } as User;
 
   authService = module.get<AuthService>(AuthService);
   userServiceMock = module.get<UserService>(UserService);
