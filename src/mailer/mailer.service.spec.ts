@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
 import { MailService } from './mailer.service';
 import { MailerService as NestMailerService } from '@nestjs-modules/mailer';
 
@@ -7,6 +8,12 @@ describe('MailService', () => {
   let mailer: { sendMail: jest.Mock };
 
   beforeEach(async () => {
+    // Mock Logger to avoid real logging in tests
+    const logSpy = jest.spyOn(Logger.prototype, 'log');
+    logSpy.mockImplementation(() => undefined);
+    const errorSpy = jest.spyOn(Logger.prototype, 'error');
+    errorSpy.mockImplementation(() => undefined);
+
     mailer = { sendMail: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -17,6 +24,10 @@ describe('MailService', () => {
     }).compile();
 
     service = module.get<MailService>(MailService);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should call underlying mailer with expected args and return result', async () => {
