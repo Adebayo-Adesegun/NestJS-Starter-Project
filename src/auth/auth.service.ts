@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ErrorCodes } from '../shared/errors/error-codes';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../core/entities/user.entity';
 import { UserService } from '../user/user.service';
@@ -18,16 +19,18 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<User> {
     const user = await this.userService.findOne({ where: { email } });
     if (!user) {
-      throw new UnauthorizedException(
-        `401 Unauthorized: Authentication Failed.`,
-      );
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
+        message: 'Authentication failed',
+      });
     }
 
     const isPasswordValid = await user.checkPassword(password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException(
-        `401 Unauthorized: Authentication Failed.`,
-      );
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
+        message: 'Authentication failed',
+      });
     }
 
     return user;

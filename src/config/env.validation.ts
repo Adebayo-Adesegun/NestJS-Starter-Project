@@ -1,5 +1,13 @@
 import { plainToInstance } from 'class-transformer';
-import { IsBooleanString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, validateSync } from 'class-validator';
+import {
+  IsBooleanString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  validateSync,
+} from 'class-validator';
 import { Environment } from 'src/core/enums/environment.enum';
 
 class EnvironmentVariables {
@@ -64,6 +72,15 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   MAIL_TEMPLATE_PATH?: string;
+
+  // JWT configuration
+  @IsNotEmpty()
+  @IsString()
+  JWT_SECRET: string;
+
+  @IsOptional()
+  @IsString()
+  JWT_EXPIRES_IN?: string; // e.g., '60s', '1h'
 }
 
 export function validate(config: Record<string, unknown>) {

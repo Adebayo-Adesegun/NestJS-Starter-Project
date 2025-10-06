@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { UsersModule } from 'src/user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from '../guards/jwt/constants';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { LocalStrategy } from '../guards/local/local.strategy';
 import { JwtStrategy } from '../guards/jwt/jwt.strategy';
@@ -14,9 +14,15 @@ import { RolesPermission } from '../core/entities/roles-permission.entity';
   imports: [
     UsersModule,
     PassportModule,
-    JwtModule.register({
-      secret: jwtConstants.secret,
-      signOptions: { expiresIn: '60s' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: config.get<string>('JWT_EXPIRES_IN') || '1h',
+        },
+      }),
     }),
     TypeOrmModule.forFeature([RolesPermission]),
   ],

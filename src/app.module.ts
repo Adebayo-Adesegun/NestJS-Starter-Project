@@ -13,6 +13,9 @@ import { typeOrmAsyncConfig } from './config/typeorm-config';
 import { AdminModule } from './admin/admin.module';
 import { MailerModule } from './mailer/mailer.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { HealthModule } from './health/health.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { SharedModule } from './shared/shared.module';
 
 @Module({
   imports: [
@@ -29,10 +32,13 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
       },
     ]),
     UtilityModule,
+    SharedModule,
     AuthModule,
     UsersModule,
     AdminModule,
     MailerModule,
+    HealthModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [

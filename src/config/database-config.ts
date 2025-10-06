@@ -11,6 +11,8 @@ const databaseConfig: DataSourceOptions & TypeOrmModuleOptions = {
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   ssl: sslOption,
+  // Auto load entities registered via TypeOrmModule.forFeature
+  autoLoadEntities: true,
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   subscribers: [__dirname + '/**/*.subscriber{.ts,.js}'],

@@ -63,3 +63,22 @@ npm run start:dev
 ```bash
 npm test
 ```
+
+## New in this template
+
+
+- Global validation pipe and exception filter with structured JSON logging (Pino)
+- Swagger docs at `/docs` with Bearer auth and versioned API prefix `/api/v1`
+- Security: Helmet, Throttler (global), strict CORS from env
+- CI: GitHub Actions (lint, tests with coverage threshold 80%, build) and secret scanning
+
+### Quickstart
+
+1. Copy `.env.example` to `.env` and set values.
+2. Install deps with `npm ci` (recommended for CI-parity).
+3. Start dev server `npm run start:dev` and open Swagger at `http://localhost:9000/docs`.
+
+### Notes
+
+- Do not commit real secrets. `.env` is ignored and secret scanning runs in CI.
+- TypeORM is configured with `autoLoadEntities` and migrations (no synchronize in prod).
