@@ -1,0 +1,15 @@
+<div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.4">
+  <h2>Verify your email</h2>
+  <p>Hello {{name}},</p>
+  <p>Thanks for signing up! Please verify your email address by clicking the button below:</p>
+  <p>
+    <a href="{{verifyUrl}}" style="display:inline-block;padding:10px 16px;background:#059669;color:#fff;text-decoration:none;border-radius:6px">Verify Email</a>
+  </p>
+  <p>If you did not create this account, no further action is required.</p>
+  <hr />
+  <small>If the button doesn’t work, copy and paste this URL into your browser: {{verifyUrl}}</small>
+  {{#if footer}}
+    <hr />
+    <small>{{footer}}</small>
+  {{/if}}
+</div>

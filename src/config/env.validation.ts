@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsEnum, IsNotEmpty, validateSync } from 'class-validator';
+import { IsBooleanString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, validateSync } from 'class-validator';
 import { Environment } from 'src/core/enums/environment.enum';
 
 class EnvironmentVariables {
@@ -28,23 +28,42 @@ class EnvironmentVariables {
   @IsNotEmpty()
   DATABASE_NAME: string;
 
-  //   @IsNotEmpty()
-  //   JWT_CONSTANT: string;
+  // Mailer configuration
+  @IsOptional()
+  @IsString()
+  MAIL_TRANSPORT?: string; // optional full transport URL
 
-  //   @IsNotEmpty()
-  //   MAIL_HOST: string;
+  @IsOptional()
+  @IsString()
+  MAIL_HOST?: string;
 
-  //   @IsNotEmpty()
-  //   MAIL_PORT: number;
+  @IsOptional()
+  @IsNumber()
+  MAIL_PORT?: number;
 
-  //   @IsNotEmpty()
-  //   MAIL_FROM: string;
+  @IsOptional()
+  @IsBooleanString()
+  MAIL_SECURE?: string;
 
-  //   @IsNotEmpty()
-  //   MAIL_USERNAME: string;
+  @IsOptional()
+  @IsString()
+  MAIL_USER?: string;
 
-  //   @IsNotEmpty()
-  //   MAIL_PASSWORD: string;
+  @IsOptional()
+  @IsString()
+  MAIL_PASSWORD?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  MAIL_FROM: string;
+
+  @IsOptional()
+  @IsBooleanString()
+  MAIL_PREVIEW?: string; // if true, don't send, just log/preview
+
+  @IsOptional()
+  @IsString()
+  MAIL_TEMPLATE_PATH?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

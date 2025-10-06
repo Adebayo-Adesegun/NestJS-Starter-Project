@@ -11,6 +11,8 @@ import { JwtAuthGuard } from './guards/jwt/jwt-auth.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmAsyncConfig } from './config/typeorm-config';
 import { AdminModule } from './admin/admin.module';
+import { MailerModule } from './mailer/mailer.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -20,16 +22,27 @@ import { AdminModule } from './admin/admin.module';
       validate,
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 100,
+      },
+    ]),
     UtilityModule,
     AuthModule,
     UsersModule,
     AdminModule,
+    MailerModule,
   ],
   controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

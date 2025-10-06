@@ -1,10 +1,9 @@
 import 'dotenv/config';
-import { User } from 'src/core/entities/user.entity';
-import { InitialMigration1702227594288 } from 'src/migrations/1702227594288-initial_migration';
 import { DataSourceOptions } from 'typeorm';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 const sslOption: boolean = process.env.DATABASE_SSL === 'true';
-const databaseConfig: DataSourceOptions = {
+const databaseConfig: DataSourceOptions & TypeOrmModuleOptions = {
   type: 'postgres',
   host: process.env.DATABASE_HOST,
   port: Number(process.env.DATABASE_PORT) || 5432,
@@ -12,8 +11,8 @@ const databaseConfig: DataSourceOptions = {
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   ssl: sslOption,
-  entities: [User],
-  migrations: [InitialMigration1702227594288],
+  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+  migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   subscribers: [__dirname + '/**/*.subscriber{.ts,.js}'],
   synchronize: false, // must always be false in production
   logging: true,

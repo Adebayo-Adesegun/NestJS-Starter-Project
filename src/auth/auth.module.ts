@@ -7,6 +7,8 @@ import { jwtConstants } from '../guards/jwt/constants';
 import { AuthController } from './auth.controller';
 import { LocalStrategy } from '../guards/local/local.strategy';
 import { JwtStrategy } from '../guards/jwt/jwt.strategy';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RolesPermission } from '../core/entities/roles-permission.entity';
 
 @Module({
   imports: [
@@ -16,6 +18,7 @@ import { JwtStrategy } from '../guards/jwt/jwt.strategy';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '60s' },
     }),
+    TypeOrmModule.forFeature([RolesPermission]),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   exports: [AuthService],
