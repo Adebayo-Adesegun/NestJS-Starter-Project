@@ -59,13 +59,18 @@ describe('UtilityService', () => {
       expect(code).toMatch(/^\d{6}$/);
     });
     it('throws for invalid length', () => {
-      expect(() => service.generateRandomNumber(0)).toThrow('Invalid OTP length');
-      expect(() => service.generateRandomNumber(-2)).toThrow('Invalid OTP length');
+      expect(() => service.generateRandomNumber(0)).toThrow(
+        'Invalid OTP length',
+      );
+      expect(() => service.generateRandomNumber(-2)).toThrow(
+        'Invalid OTP length',
+      );
     });
   });
 
   describe('date helpers', () => {
-    const onlyDate = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString();
+    const onlyDate = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString();
 
     it('computes first/last dates correctly relative to now', () => {
       const firstLastMonth = service.getFirstDateOfLastMonth();
@@ -107,7 +112,9 @@ describe('UtilityService', () => {
 
       const url = await service.uploadToS3(file);
       expect(sendMock).toHaveBeenCalledTimes(1);
-      expect(url).toBe('https://test-bucket.s3.amazonaws.com/mydocumentfinal.pdf');
+      expect(url).toBe(
+        'https://test-bucket.s3.amazonaws.com/mydocumentfinal.pdf',
+      );
     });
 
     it('throws when upload fails', async () => {
@@ -117,7 +124,9 @@ describe('UtilityService', () => {
         buffer: Buffer.from('data'),
         mimetype: 'application/pdf',
       } as unknown as Express.Multer.File;
-      await expect(service.uploadToS3(file)).rejects.toThrow('Failed to upload file');
+      await expect(service.uploadToS3(file)).rejects.toThrow(
+        'Failed to upload file',
+      );
     });
   });
 });

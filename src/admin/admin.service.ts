@@ -32,6 +32,6 @@ export class AdminService {
       where: { role: { id: roleId } },
       relations: ['permission'],
     });
-    return permissions.map(rp => rp.permission.name);
+    return permissions.map((rp) => rp.permission.name);
   }
 }

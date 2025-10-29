@@ -54,11 +54,13 @@ describe('HealthController', () => {
   it('check should call healthService.check with indicators', async () => {
     (db.pingCheck as jest.Mock).mockResolvedValue({ db: { status: 'up' } });
     (memory.checkHeap as jest.Mock).mockResolvedValue({ memory: 'ok' });
-    (healthService.check as jest.Mock).mockImplementation(async (fns: any[]) => {
-      // execute provided indicator checks
-      const results = await Promise.all(fns.map((fn) => fn()));
-      return { status: 'ok', details: results } as any;
-    });
+    (healthService.check as jest.Mock).mockImplementation(
+      async (fns: any[]) => {
+        // execute provided indicator checks
+        const results = await Promise.all(fns.map((fn) => fn()));
+        return { status: 'ok', details: results } as any;
+      },
+    );
 
     const result = await controller.check();
     expect(result.status).toBe('ok');
@@ -69,10 +71,12 @@ describe('HealthController', () => {
 
   it('ready should call healthService.check with db indicator only', async () => {
     (db.pingCheck as jest.Mock).mockResolvedValue({ db: { status: 'up' } });
-    (healthService.check as jest.Mock).mockImplementation(async (fns: any[]) => {
-      const results = await Promise.all(fns.map((fn) => fn()));
-      return { status: 'ok', details: results } as any;
-    });
+    (healthService.check as jest.Mock).mockImplementation(
+      async (fns: any[]) => {
+        const results = await Promise.all(fns.map((fn) => fn()));
+        return { status: 'ok', details: results } as any;
+      },
+    );
 
     const result = await controller.ready();
     expect(result.status).toBe('ok');
