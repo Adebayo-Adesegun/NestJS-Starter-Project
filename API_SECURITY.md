@@ -17,7 +17,7 @@ Response 200:
   "statusCode": 200,
   "message": ["Login successful"],
   "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "access_token": "<JWT_TOKEN_HERE>",
     "user": {
       "id": 1,
       "firstName": "John",
