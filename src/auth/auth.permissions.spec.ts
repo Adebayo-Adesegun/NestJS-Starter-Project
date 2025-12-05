@@ -4,6 +4,7 @@ import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { RolesPermission } from '../core/entities/roles-permission.entity';
+import { PasswordResetToken } from '../core/entities/password-reset-token.entity';
 
 describe('AuthService - getPermissionsByRole', () => {
   let service: AuthService;
@@ -28,6 +29,15 @@ describe('AuthService - getPermissionsByRole', () => {
         { provide: UserService, useValue: {} },
         { provide: JwtService, useValue: { signAsync: jest.fn() } },
         { provide: getRepositoryToken(RolesPermission), useValue: repo },
+        {
+          provide: getRepositoryToken(PasswordResetToken),
+          useValue: {
+            findOne: jest.fn(),
+            delete: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { ErrorCodes } from '../common/errors/error-codes';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../core/entities/user.entity';
@@ -6,6 +12,11 @@ import { UserService } from '../user/user.service';
 import { RolesPermission } from '../core/entities/roles-permission.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { MailService } from '../mailer/mailer.service';
+import { ConfigService } from '@nestjs/config';
+import { StrongPasswordValidator } from '../user/validator/strong-password.validator';
+import { PasswordResetToken } from '../core/entities/password-reset-token.entity';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +25,10 @@ export class AuthService {
     private jwtService: JwtService,
     @InjectRepository(RolesPermission)
     private readonly rolesPermissionRepository: Repository<RolesPermission>,
+    @InjectRepository(PasswordResetToken)
+    private readonly passwordResetTokenRepository: Repository<PasswordResetToken>,
+    @Optional() private readonly mailService?: MailService,
+    @Optional() private readonly configService?: ConfigService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<User> {
@@ -56,5 +71,159 @@ export class AuthService {
       .getRawMany();
 
     return permissions.map((permission) => permission.name);
+  }
+
+  /**
+   * Send a password reset email with a persistent reset token stored in database.
+   * Always return silently to avoid account enumeration.
+   */
+  async sendPasswordReset(email: string) {
+    const user = await this.userService.findOne({ where: { email } });
+
+    if (!user) {
+      // Do not reveal existence of account
+      return;
+    }
+
+    // Generate a random token and hash it for storage
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const expiresInMinutes =
+      parseInt(
+        this.configService?.get<string>('PASSWORD_RESET_EXPIRES_IN') || '60',
+      ) || 60;
+    const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000);
+
+    // Delete any prior unused tokens for this user
+    await this.passwordResetTokenRepository.delete({
+      userId: user.id,
+      used: false,
+    });
+
+    // Create new reset token in database
+    const resetToken = this.passwordResetTokenRepository.create({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    });
+    await this.passwordResetTokenRepository.save(resetToken);
+
+    // Build reset link with token
+    const frontendUrl = this.configService?.get<string>('FRONTEND_URL');
+    const resetLink = frontendUrl
+      ? `${frontendUrl}/reset-password?token=${token}`
+      : token;
+
+    try {
+      await this.mailService?.send({
+        to: user.email,
+        subject: 'Password reset instructions',
+        template: 'password-reset',
+        context: {
+          firstName: user.firstName || 'User',
+          resetLink,
+          expiresIn: expiresInMinutes,
+        },
+      });
+    } catch (err) {
+      Logger.error(`Failed to send reset email to ${email}: ${err?.message}`);
+    }
+  }
+
+  /**
+   * Reset password using a persistent reset token from database
+   */
+  async resetPassword(token: string, newPassword: string) {
+    // Hash token to look up in database
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const resetToken = await this.passwordResetTokenRepository.findOne({
+      where: { tokenHash },
+      relations: ['user'],
+    });
+
+    if (!resetToken) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_INVALID_TOKEN,
+        message: 'Invalid or expired token',
+      });
+    }
+
+    // Check if token is expired
+    if (resetToken.expiresAt < new Date()) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_INVALID_TOKEN,
+        message: 'Invalid or expired token',
+      });
+    }
+
+    // Prevent token reuse
+    if (resetToken.used) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_INVALID_TOKEN,
+        message: 'Token has already been used',
+      });
+    }
+
+    // Enforce strong password server-side
+    const validator = new StrongPasswordValidator();
+    if (!validator.validate(newPassword)) {
+      throw new BadRequestException(
+        'New password does not meet strength requirements',
+      );
+    }
+
+    const user = resetToken.user;
+    if (!user) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_INVALID_TOKEN,
+        message: 'Invalid token',
+      });
+    }
+
+    // Update password and set passwordChangedAt
+    await this.userService.updatePassword(user.id, newPassword);
+
+    // Mark token as used
+    resetToken.used = true;
+    resetToken.usedAt = new Date();
+    await this.passwordResetTokenRepository.save(resetToken);
+  }
+
+  /**
+   * Change password for authenticated users
+   */
+  async changePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.userService.findOne({
+      where: { id: userId } as any,
+    });
+    if (!user) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
+        message: 'Authentication failed',
+      });
+    }
+
+    const isValid = await user.checkPassword(currentPassword);
+    if (!isValid) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
+        message: 'Current password is incorrect',
+      });
+    }
+
+    const validator = new StrongPasswordValidator();
+    if (!validator.validate(newPassword)) {
+      throw new BadRequestException(
+        'New password does not meet strength requirements',
+      );
+    }
+
+    await this.userService.updatePassword(user.id, newPassword);
   }
 }

@@ -33,6 +33,15 @@ beforeAll(async () => {
           save: jest.fn(),
         },
       },
+      {
+        provide: 'PasswordResetTokenRepository',
+        useValue: {
+          findOne: jest.fn(),
+          delete: jest.fn(),
+          create: jest.fn(),
+          save: jest.fn(),
+        },
+      },
     ],
   }).compile();
 

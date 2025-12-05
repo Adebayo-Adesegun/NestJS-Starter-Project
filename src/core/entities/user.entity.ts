@@ -78,6 +78,13 @@ export class User extends BaseEntity {
   @Column({ type: 'timestamp', name: 'last_login', nullable: true })
   lastLogin: Date;
 
+  @Column({
+    type: 'timestamp',
+    name: 'password_changed_at',
+    nullable: true,
+  })
+  passwordChangedAt: Date;
+
   @Column({ type: 'boolean', name: 'is_admin', default: false })
   isAdmin: boolean;
 

@@ -11,6 +11,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolesPermission } from '../core/entities/roles-permission.entity';
 import { AccountLockoutService } from './account-lockout.service';
 import { User } from '../core/entities/user.entity';
+import { MailerModule } from '../mailer/mailer.module';
+import { PasswordResetToken } from '../core/entities/password-reset-token.entity';
 
 @Module({
   imports: [
@@ -26,7 +28,10 @@ import { User } from '../core/entities/user.entity';
         },
       }),
     }),
-    TypeOrmModule.forFeature([RolesPermission, User]),
+    TypeOrmModule.forFeature([RolesPermission, User, PasswordResetToken]),
+    // provide mailer so AuthService can send reset emails
+    // MailerModule exports MailService
+    MailerModule,
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy, AccountLockoutService],
   exports: [AuthService, AccountLockoutService],

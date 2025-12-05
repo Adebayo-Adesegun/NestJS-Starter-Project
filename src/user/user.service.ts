@@ -53,4 +53,16 @@ export class UserService {
     await this.userRepository.save(user);
     return [true, 'User created successfully.', registerDto];
   }
+
+  async updatePassword(userId: number, newPassword: string): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId } as any,
+    });
+    if (!user) {
+      throw new Error('User not found');
+    }
+    user.password = newPassword;
+    user.passwordChangedAt = new Date();
+    await this.userRepository.save(user);
+  }
 }
