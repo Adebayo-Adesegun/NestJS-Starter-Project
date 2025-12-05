@@ -3,91 +3,58 @@ import * as crypto from 'crypto';
 
 /**
  * Audit Logger Service
- * Logs security-relevant events without exposing PII (Personally Identifiable Information)
- * Uses hashing to prevent email addresses from appearing in logs
+ * Generic and reusable service for logging security-relevant events
+ * Automatically handles PII (Personally Identifiable Information) hashing
  */
 @Injectable()
 export class AuditLoggerService {
   private readonly logger = new Logger('AUDIT');
 
   /**
-   * Hash an email address for logging (SHA256 first 8 chars)
+   * Hash sensitive data for logging (SHA256 first 8 chars)
    * Provides consistency without exposing sensitive data
    */
-  private hashEmail(email: string): string {
+  private hashSensitiveData(data: string): string {
     return crypto
       .createHash('sha256')
-      .update(email)
+      .update(data)
       .digest('hex')
       .substring(0, 8);
   }
 
   /**
-   * Log a password reset request
+   * Generic audit log method
+   * @param event - Event name (e.g., 'PASSWORD_RESET_REQUESTED', 'LOGIN_FAILED')
+   * @param metadata - Object containing event metadata
+   * @param level - Log level: 'log' (info), 'warn', 'error' (default: 'log')
+   *
+   * Example usage:
+   * auditLogger.log('PASSWORD_RESET_REQUESTED', { email: 'user@example.com' });
+   * auditLogger.log('RATE_LIMIT_EXCEEDED', { ip: '1.2.3.4', endpoint: '/auth/login' }, 'warn');
    */
-  logPasswordResetRequested(email: string): void {
-    const emailHash = this.hashEmail(email);
-    const emailDomain = email.split('@')[1] || 'unknown';
-    this.logger.log(
-      `PASSWORD_RESET_REQUESTED | email_hash: ${emailHash} | domain: ${emailDomain}`,
-    );
-  }
+  log(
+    event: string,
+    metadata: Record<string, any> = {},
+    level: 'log' | 'warn' | 'error' = 'log',
+  ): void {
+    // Process metadata to hash sensitive fields
+    const processedMetadata = { ...metadata };
 
-  /**
-   * Log a successful password reset
-   */
-  logPasswordResetSuccess(userId: number): void {
-    this.logger.log(`PASSWORD_RESET_SUCCESS | user_id: ${userId}`);
-  }
+    // Auto-hash email addresses
+    if (processedMetadata.email) {
+      const email = processedMetadata.email as string;
+      processedMetadata.email_hash = this.hashSensitiveData(email);
+      processedMetadata.email_domain = email.split('@')[1] || 'unknown';
+      delete processedMetadata.email; // Remove original email
+    }
 
-  /**
-   * Log a password reset attempt with invalid token
-   */
-  logPasswordResetFailure(reason: string): void {
-    this.logger.log(`PASSWORD_RESET_FAILURE | reason: ${reason}`);
-  }
+    // Format metadata as key-value pairs
+    const metadataString = Object.entries(processedMetadata)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(' | ');
 
-  /**
-   * Log a password reset token being marked as used (preventing reuse)
-   */
-  logPasswordResetTokenUsed(userId: number): void {
-    this.logger.log(`PASSWORD_RESET_TOKEN_USED | user_id: ${userId}`);
-  }
+    const logMessage = metadataString ? `${event} | ${metadataString}` : event;
 
-  /**
-   * Log a password change request by authenticated user
-   */
-  logPasswordChangeRequested(userId: number): void {
-    this.logger.log(`PASSWORD_CHANGE_REQUESTED | user_id: ${userId}`);
-  }
-
-  /**
-   * Log a successful password change
-   */
-  logPasswordChangeSuccess(userId: number): void {
-    this.logger.log(`PASSWORD_CHANGE_SUCCESS | user_id: ${userId}`);
-  }
-
-  /**
-   * Log a password change attempt with incorrect current password
-   */
-  logPasswordChangeFailure(userId: number, reason: string): void {
-    this.logger.log(
-      `PASSWORD_CHANGE_FAILURE | user_id: ${userId} | reason: ${reason}`,
-    );
-  }
-
-  /**
-   * Log multiple password reset requests from same IP within short window (abuse detection)
-   */
-  logRateLimitExceeded(ip: string, endpoint: string): void {
-    this.logger.warn(`RATE_LIMIT_EXCEEDED | ip: ${ip} | endpoint: ${endpoint}`);
-  }
-
-  /**
-   * Log token expiry (for cleanup/monitoring)
-   */
-  logPasswordResetTokenExpired(userId: number): void {
-    this.logger.log(`PASSWORD_RESET_TOKEN_EXPIRED | user_id: ${userId}`);
+    this.logger[level](logMessage);
   }
 }

@@ -144,7 +144,11 @@ export class AuthController {
 
     const rl = await this.rateLimiter.checkRateLimit(key, limit, windowMs);
     if (rl.limited) {
-      this.auditLogger.logRateLimitExceeded(ip, '/auth/forgot-password');
+      this.auditLogger.log(
+        'RATE_LIMIT_EXCEEDED',
+        { ip, endpoint: '/auth/forgot-password' },
+        'warn',
+      );
       throw new HttpException(
         'Too many password reset requests. Try again later.',
         HttpStatus.TOO_MANY_REQUESTS,

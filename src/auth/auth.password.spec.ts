@@ -30,14 +30,7 @@ describe('Auth Password Flows', () => {
         {
           provide: AuditLoggerService,
           useValue: {
-            logPasswordResetRequested: jest.fn(),
-            logPasswordResetSuccess: jest.fn(),
-            logPasswordResetFailure: jest.fn(),
-            logPasswordResetTokenUsed: jest.fn(),
-            logPasswordChangeRequested: jest.fn(),
-            logPasswordChangeSuccess: jest.fn(),
-            logPasswordChangeFailure: jest.fn(),
-            logRateLimitExceeded: jest.fn(),
+            log: jest.fn(),
           },
         },
         {

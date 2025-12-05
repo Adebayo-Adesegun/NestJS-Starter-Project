@@ -1,59 +1,68 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 /**
  * Rate Limiter Service
- * Provides distributed rate limiting with Redis support (if configured)
- * Falls back to in-memory storage for simple deployments
+ * Provides distributed rate limiting with Redis (REQUIRED)
  *
- * For production with multiple instances, use Redis:
+ * Production requirement:
  * - Install ioredis: npm install ioredis
  * - Set REDIS_URL env var: redis://localhost:6379
+ *
+ * This service enforces Redis usage to ensure consistency
+ * across multiple application instances.
  */
 @Injectable()
 export class RateLimiterService {
   private readonly logger = new Logger(RateLimiterService.name);
-  private readonly redisUrl?: string;
+  private readonly redisUrl: string;
   private redisClient: any = null;
-
-  private inMemoryStore: Map<string, { count: number; resetAt: number }> =
-    new Map();
-
-  private isRedisAvailable = false;
 
   constructor(private readonly configService: ConfigService) {
     this.redisUrl = this.configService.get<string>('REDIS_URL');
+    if (!this.redisUrl) {
+      throw new InternalServerErrorException(
+        'REDIS_URL is required for rate limiting. Please configure Redis in environment variables.',
+      );
+    }
     this.initializeRedis();
   }
 
   /**
-   * Initialize Redis connection if REDIS_URL is configured
+   * Initialize Redis connection (REQUIRED)
    */
   private async initializeRedis(): Promise<void> {
-    if (!this.redisUrl) {
-      this.logger.log(
-        'REDIS_URL not configured. Using in-memory rate limiter.',
-      );
-      return;
-    }
-
     try {
       // Dynamic import to avoid hard dependency on ioredis
       // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
       const Redis = require('ioredis').default || require('ioredis');
       this.redisClient = new Redis(this.redisUrl);
-      this.isRedisAvailable = true;
-      this.logger.log('Redis rate limiter initialized successfully');
+
+      this.redisClient.on('error', (err: Error) => {
+        this.logger.error(`Redis connection error: ${err.message}`);
+      });
+
+      this.redisClient.on('connect', () => {
+        this.logger.log('Redis rate limiter connected successfully');
+      });
+
+      this.logger.log('Redis rate limiter initialized');
     } catch (err) {
-      this.logger.warn(
-        'Redis connection failed (ioredis not installed or REDIS_URL invalid). Falling back to in-memory limiter. Install with: npm install ioredis',
+      this.logger.error(
+        'Redis initialization failed. Install ioredis: npm install ioredis',
       );
-      this.isRedisAvailable = false;
+      throw new InternalServerErrorException(
+        'Rate limiting service unavailable. Redis connection required.',
+      );
     }
   }
 
   /**
-   * Check if IP/key has exceeded rate limit
+   * Check if IP/key has exceeded rate limit using Redis
    * Returns true if limit exceeded, false if within limit
    */
   async checkRateLimit(
@@ -61,26 +70,11 @@ export class RateLimiterService {
     maxRequests: number,
     windowMs: number,
   ): Promise<{ limited: boolean; remaining: number; resetAt: number }> {
-    if (this.isRedisAvailable) {
-      return this.checkRateLimitRedis(key, maxRequests, windowMs);
-    } else {
-      return this.checkRateLimitMemory(key, maxRequests, windowMs);
-    }
-  }
+    const now = Date.now();
+    const windowStart = now - windowMs;
+    const redisKey = `ratelimit:${key}`;
 
-  /**
-   * Redis-based rate limiting
-   */
-  private async checkRateLimitRedis(
-    key: string,
-    maxRequests: number,
-    windowMs: number,
-  ): Promise<{ limited: boolean; remaining: number; resetAt: number }> {
     try {
-      const now = Date.now();
-      const windowStart = now - windowMs;
-      const redisKey = `ratelimit:${key}`;
-
       // Use Redis ZSET to track requests by timestamp
       // This provides distributed rate limiting across instances
       await this.redisClient.zremrangebyscore(redisKey, '-inf', windowStart);
@@ -109,74 +103,23 @@ export class RateLimiterService {
       };
     } catch (err) {
       this.logger.error(
-        `Redis rate limit check failed: ${err?.message}. Falling back to in-memory.`,
+        `Redis rate limit check failed: ${err?.message}. Rejecting request.`,
       );
-      // Fallback to in-memory on Redis error
-      return this.checkRateLimitMemory(key, maxRequests, windowMs);
+      throw new InternalServerErrorException(
+        'Rate limiting service unavailable',
+      );
     }
   }
 
   /**
-   * In-memory rate limiting (for single instance or fallback)
-   */
-  private checkRateLimitMemory(
-    key: string,
-    maxRequests: number,
-    windowMs: number,
-  ): { limited: boolean; remaining: number; resetAt: number } {
-    const now = Date.now();
-    const entry = this.inMemoryStore.get(key);
-
-    if (!entry) {
-      // First request in this window
-      this.inMemoryStore.set(key, { count: 1, resetAt: now + windowMs });
-      return {
-        limited: false,
-        remaining: maxRequests - 1,
-        resetAt: now + windowMs,
-      };
-    }
-
-    if (now >= entry.resetAt) {
-      // Window expired, reset counter
-      this.inMemoryStore.set(key, { count: 1, resetAt: now + windowMs });
-      return {
-        limited: false,
-        remaining: maxRequests - 1,
-        resetAt: now + windowMs,
-      };
-    }
-
-    if (entry.count >= maxRequests) {
-      // Limit exceeded
-      return {
-        limited: true,
-        remaining: 0,
-        resetAt: entry.resetAt,
-      };
-    }
-
-    // Increment counter within window
-    entry.count += 1;
-    return {
-      limited: false,
-      remaining: maxRequests - entry.count,
-      resetAt: entry.resetAt,
-    };
-  }
-
-  /**
-   * Reset rate limit for a key (e.g., after successful login to clear failed attempts)
+   * Reset rate limit for a key (e.g., after successful action)
    */
   async resetRateLimit(key: string): Promise<void> {
-    if (this.isRedisAvailable) {
-      try {
-        await this.redisClient.del(`ratelimit:${key}`);
-      } catch (err) {
-        this.logger.error(`Redis reset failed for key ${key}: ${err?.message}`);
-      }
-    } else {
-      this.inMemoryStore.delete(key);
+    try {
+      await this.redisClient.del(`ratelimit:${key}`);
+    } catch (err) {
+      this.logger.error(`Redis reset failed for key ${key}: ${err?.message}`);
+      throw new InternalServerErrorException('Failed to reset rate limit');
     }
   }
 
@@ -186,19 +129,16 @@ export class RateLimiterService {
   async getStatus(
     key: string,
   ): Promise<{ count: number; resetAt: number } | null> {
-    if (this.isRedisAvailable) {
-      try {
-        const count = await this.redisClient.zcard(`ratelimit:${key}`);
-        const ttl = await this.redisClient.ttl(`ratelimit:${key}`);
-        return {
-          count,
-          resetAt: Date.now() + (ttl > 0 ? ttl * 1000 : 0),
-        };
-      } catch (err) {
-        return null;
-      }
-    } else {
-      return this.inMemoryStore.get(key) || null;
+    try {
+      const count = await this.redisClient.zcard(`ratelimit:${key}`);
+      const ttl = await this.redisClient.ttl(`ratelimit:${key}`);
+      return {
+        count,
+        resetAt: Date.now() + (ttl > 0 ? ttl * 1000 : 0),
+      };
+    } catch (err) {
+      this.logger.error(`Redis status check failed: ${err?.message}`);
+      return null;
     }
   }
 }
