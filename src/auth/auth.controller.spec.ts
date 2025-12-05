@@ -8,7 +8,6 @@ import { BadRequestException } from '@nestjs/common';
 describe('AuthController', () => {
   let controller: AuthController;
   let userService: UserService;
-  let accountLockoutService: AccountLockoutService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -35,9 +34,6 @@ describe('AuthController', () => {
 
     controller = module.get<AuthController>(AuthController);
     userService = module.get<UserService>(UserService);
-    accountLockoutService = module.get<AccountLockoutService>(
-      AccountLockoutService,
-    );
   });
 
   it('should be defined', () => {
