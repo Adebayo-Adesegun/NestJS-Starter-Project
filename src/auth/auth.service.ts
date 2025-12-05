@@ -16,6 +16,7 @@ import { MailService } from '../mailer/mailer.service';
 import { ConfigService } from '@nestjs/config';
 import { StrongPasswordValidator } from '../user/validator/strong-password.validator';
 import { PasswordResetToken } from '../core/entities/password-reset-token.entity';
+import { AuditLoggerService } from '../common/audit/audit-logger.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -27,6 +28,7 @@ export class AuthService {
     private readonly rolesPermissionRepository: Repository<RolesPermission>,
     @InjectRepository(PasswordResetToken)
     private readonly passwordResetTokenRepository: Repository<PasswordResetToken>,
+    private readonly auditLogger: AuditLoggerService,
     @Optional() private readonly mailService?: MailService,
     @Optional() private readonly configService?: ConfigService,
   ) {}
@@ -78,6 +80,9 @@ export class AuthService {
    * Always return silently to avoid account enumeration.
    */
   async sendPasswordReset(email: string) {
+    // Log the request before checking user existence (helps with audit trail)
+    this.auditLogger.logPasswordResetRequested(email);
+
     const user = await this.userService.findOne({ where: { email } });
 
     if (!user) {
@@ -144,6 +149,7 @@ export class AuthService {
     });
 
     if (!resetToken) {
+      this.auditLogger.logPasswordResetFailure('invalid_token');
       throw new UnauthorizedException({
         code: ErrorCodes.AUTH_INVALID_TOKEN,
         message: 'Invalid or expired token',
@@ -152,6 +158,7 @@ export class AuthService {
 
     // Check if token is expired
     if (resetToken.expiresAt < new Date()) {
+      this.auditLogger.logPasswordResetFailure('token_expired');
       throw new UnauthorizedException({
         code: ErrorCodes.AUTH_INVALID_TOKEN,
         message: 'Invalid or expired token',
@@ -160,6 +167,7 @@ export class AuthService {
 
     // Prevent token reuse
     if (resetToken.used) {
+      this.auditLogger.logPasswordResetFailure('token_reused');
       throw new UnauthorizedException({
         code: ErrorCodes.AUTH_INVALID_TOKEN,
         message: 'Token has already been used',
@@ -176,6 +184,7 @@ export class AuthService {
 
     const user = resetToken.user;
     if (!user) {
+      this.auditLogger.logPasswordResetFailure('user_not_found');
       throw new UnauthorizedException({
         code: ErrorCodes.AUTH_INVALID_TOKEN,
         message: 'Invalid token',
@@ -189,6 +198,10 @@ export class AuthService {
     resetToken.used = true;
     resetToken.usedAt = new Date();
     await this.passwordResetTokenRepository.save(resetToken);
+
+    // Log successful password reset
+    this.auditLogger.logPasswordResetSuccess(user.id);
+    this.auditLogger.logPasswordResetTokenUsed(user.id);
   }
 
   /**
@@ -199,10 +212,13 @@ export class AuthService {
     currentPassword: string,
     newPassword: string,
   ) {
+    this.auditLogger.logPasswordChangeRequested(userId);
+
     const user = await this.userService.findOne({
       where: { id: userId } as any,
     });
     if (!user) {
+      this.auditLogger.logPasswordChangeFailure(userId, 'user_not_found');
       throw new UnauthorizedException({
         code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
         message: 'Authentication failed',
@@ -211,6 +227,10 @@ export class AuthService {
 
     const isValid = await user.checkPassword(currentPassword);
     if (!isValid) {
+      this.auditLogger.logPasswordChangeFailure(
+        userId,
+        'invalid_current_password',
+      );
       throw new UnauthorizedException({
         code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
         message: 'Current password is incorrect',
@@ -225,5 +245,8 @@ export class AuthService {
     }
 
     await this.userService.updatePassword(user.id, newPassword);
+
+    // Log successful password change
+    this.auditLogger.logPasswordChangeSuccess(userId);
   }
 }

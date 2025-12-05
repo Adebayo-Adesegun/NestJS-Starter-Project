@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { UnauthorizedException } from '@nestjs/common';
+import { AuditLoggerService } from '../common/audit/audit-logger.service';
 
 let authService: AuthService;
 let userServiceMock: UserService;
@@ -40,6 +41,19 @@ beforeAll(async () => {
           delete: jest.fn(),
           create: jest.fn(),
           save: jest.fn(),
+        },
+      },
+      {
+        provide: AuditLoggerService,
+        useValue: {
+          logPasswordResetRequested: jest.fn(),
+          logPasswordResetSuccess: jest.fn(),
+          logPasswordResetFailure: jest.fn(),
+          logPasswordResetTokenUsed: jest.fn(),
+          logPasswordChangeRequested: jest.fn(),
+          logPasswordChangeSuccess: jest.fn(),
+          logPasswordChangeFailure: jest.fn(),
+          logRateLimitExceeded: jest.fn(),
         },
       },
     ],

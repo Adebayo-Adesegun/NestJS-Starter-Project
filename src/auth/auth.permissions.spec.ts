@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { RolesPermission } from '../core/entities/roles-permission.entity';
 import { PasswordResetToken } from '../core/entities/password-reset-token.entity';
+import { AuditLoggerService } from '../common/audit/audit-logger.service';
 
 describe('AuthService - getPermissionsByRole', () => {
   let service: AuthService;
@@ -36,6 +37,19 @@ describe('AuthService - getPermissionsByRole', () => {
             delete: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
+          },
+        },
+        {
+          provide: AuditLoggerService,
+          useValue: {
+            logPasswordResetRequested: jest.fn(),
+            logPasswordResetSuccess: jest.fn(),
+            logPasswordResetFailure: jest.fn(),
+            logPasswordResetTokenUsed: jest.fn(),
+            logPasswordChangeRequested: jest.fn(),
+            logPasswordChangeSuccess: jest.fn(),
+            logPasswordChangeFailure: jest.fn(),
+            logRateLimitExceeded: jest.fn(),
           },
         },
       ],

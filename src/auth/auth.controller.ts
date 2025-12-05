@@ -22,6 +22,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from '../guards/jwt/jwt-auth.guard';
+import { AuditLoggerService } from '../common/audit/audit-logger.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -38,6 +39,7 @@ export class AuthController {
     private authService: AuthService,
     private userService: UserService,
     private accountLockoutService: AccountLockoutService,
+    private auditLogger: AuditLoggerService,
   ) {}
 
   @Public()
@@ -155,6 +157,7 @@ export class AuthController {
         });
       } else {
         if (entry.count >= limit) {
+          this.auditLogger.logRateLimitExceeded(ip, '/auth/forgot-password');
           throw new HttpException(
             'Too many password reset requests. Try again later.',
             HttpStatus.TOO_MANY_REQUESTS,

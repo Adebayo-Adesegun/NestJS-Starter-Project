@@ -3,6 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 import { AccountLockoutService } from './account-lockout.service';
+import { AuditLoggerService } from '../common/audit/audit-logger.service';
 
 describe('Auth Password Flows', () => {
   let controller: AuthController;
@@ -24,6 +25,19 @@ describe('Auth Password Flows', () => {
         {
           provide: AccountLockoutService,
           useValue: {},
+        },
+        {
+          provide: AuditLoggerService,
+          useValue: {
+            logPasswordResetRequested: jest.fn(),
+            logPasswordResetSuccess: jest.fn(),
+            logPasswordResetFailure: jest.fn(),
+            logPasswordResetTokenUsed: jest.fn(),
+            logPasswordChangeRequested: jest.fn(),
+            logPasswordChangeSuccess: jest.fn(),
+            logPasswordChangeFailure: jest.fn(),
+            logRateLimitExceeded: jest.fn(),
+          },
         },
       ],
     }).compile();
