@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 import { AccountLockoutService } from './account-lockout.service';
 import { AuditLoggerService } from '../common/audit/audit-logger.service';
+import { RateLimiterService } from '../common/rate-limiter/rate-limiter.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 
 describe('AuthController', () => {
@@ -49,6 +50,14 @@ describe('AuthController', () => {
             logPasswordChangeSuccess: jest.fn(),
             logPasswordChangeFailure: jest.fn(),
             logRateLimitExceeded: jest.fn(),
+          },
+        },
+        {
+          provide: RateLimiterService,
+          useValue: {
+            checkRateLimit: jest.fn().mockResolvedValue({ limited: false, remaining: 2, resetAt: Date.now() + 3600000 }),
+            resetRateLimit: jest.fn(),
+            getStatus: jest.fn(),
           },
         },
       ],

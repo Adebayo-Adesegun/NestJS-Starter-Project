@@ -23,6 +23,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from '../guards/jwt/jwt-auth.guard';
 import { AuditLoggerService } from '../common/audit/audit-logger.service';
+import { RateLimiterService } from '../common/rate-limiter/rate-limiter.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -30,16 +31,13 @@ export class AuthController {
   // Simple in-memory rate limiter for forgot-password to enforce tighter limits
   // Keyed by IP address (and optionally email) to reduce abuse. This is
   // intentionally simple; for clustered deployments use Redis or a central store.
-  private static forgotPasswordAttempts: Map<
-    string,
-    { count: number; first: number }
-  > = new Map();
 
   constructor(
     private authService: AuthService,
     private userService: UserService,
     private accountLockoutService: AccountLockoutService,
     private auditLogger: AuditLoggerService,
+    private rateLimiter: RateLimiterService,
   ) {}
 
   @Public()
@@ -141,31 +139,16 @@ export class AuthController {
     const ip =
       (req && (req.ip || req.headers?.['x-forwarded-for'])) || 'unknown';
     const key = `fp:${ip}`;
-    const now = Date.now();
     const windowMs = 60 * 60 * 1000; // 1 hour
     const limit = 3;
 
-    const entry = AuthController.forgotPasswordAttempts.get(key);
-    if (!entry) {
-      AuthController.forgotPasswordAttempts.set(key, { count: 1, first: now });
-    } else {
-      if (now - entry.first > windowMs) {
-        // Reset window
-        AuthController.forgotPasswordAttempts.set(key, {
-          count: 1,
-          first: now,
-        });
-      } else {
-        if (entry.count >= limit) {
-          this.auditLogger.logRateLimitExceeded(ip, '/auth/forgot-password');
-          throw new HttpException(
-            'Too many password reset requests. Try again later.',
-            HttpStatus.TOO_MANY_REQUESTS,
-          );
-        }
-        entry.count += 1;
-        AuthController.forgotPasswordAttempts.set(key, entry);
-      }
+    const rl = await this.rateLimiter.checkRateLimit(key, limit, windowMs);
+    if (rl.limited) {
+      this.auditLogger.logRateLimitExceeded(ip, '/auth/forgot-password');
+      throw new HttpException(
+        'Too many password reset requests. Try again later.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     await this.authService.sendPasswordReset(dto.email);
