@@ -55,7 +55,11 @@ describe('AuthController', () => {
         {
           provide: RateLimiterService,
           useValue: {
-            checkRateLimit: jest.fn().mockResolvedValue({ limited: false, remaining: 2, resetAt: Date.now() + 3600000 }),
+            checkRateLimit: jest.fn().mockResolvedValue({
+              limited: false,
+              remaining: 2,
+              resetAt: Date.now() + 3600000,
+            }),
             resetRateLimit: jest.fn(),
             getStatus: jest.fn(),
           },

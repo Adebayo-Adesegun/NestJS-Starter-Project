@@ -43,7 +43,11 @@ describe('Auth Password Flows', () => {
         {
           provide: RateLimiterService,
           useValue: {
-            checkRateLimit: jest.fn().mockResolvedValue({ limited: false, remaining: 2, resetAt: Date.now() + 3600000 }),
+            checkRateLimit: jest.fn().mockResolvedValue({
+              limited: false,
+              remaining: 2,
+              resetAt: Date.now() + 3600000,
+            }),
             resetRateLimit: jest.fn(),
             getStatus: jest.fn(),
           },
@@ -96,5 +100,46 @@ describe('Auth Password Flows', () => {
       dto.newPassword,
     );
     expect(res).toHaveProperty('statusCode', 200);
+  });
+
+  it('forgotPassword should enforce rate limit and throw 429 when limit exceeded', async () => {
+    const dto = { email: 'test@example.com' } as any;
+    const req = { ip: '127.0.0.1', headers: {} } as any;
+    const rateLimiter = controller['rateLimiter'];
+
+    (rateLimiter.checkRateLimit as jest.Mock).mockResolvedValueOnce({
+      limited: true,
+      remaining: 0,
+      resetAt: Date.now() + 3600000,
+    });
+
+    await expect(controller.forgotPassword(dto, req)).rejects.toThrow();
+  });
+
+  it('resetPassword should fail when token is reused', async () => {
+    const dto = {
+      token: 'already-used-token',
+      newPassword: 'NewPass123!',
+    } as any;
+
+    (authService.resetPassword as jest.Mock).mockRejectedValueOnce(
+      new Error('Token has already been used'),
+    );
+
+    await expect(controller.resetPassword(dto)).rejects.toThrow(
+      'Token has already been used',
+    );
+  });
+
+  it('resetPassword should fail when token is expired', async () => {
+    const dto = { token: 'expired-token', newPassword: 'NewPass123!' } as any;
+
+    (authService.resetPassword as jest.Mock).mockRejectedValueOnce(
+      new Error('Invalid or expired token'),
+    );
+
+    await expect(controller.resetPassword(dto)).rejects.toThrow(
+      'Invalid or expired token',
+    );
   });
 });
