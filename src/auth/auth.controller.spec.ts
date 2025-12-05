@@ -115,9 +115,9 @@ describe('AuthController', () => {
     });
 
     it('should return 200 with access_token on successful login', async () => {
-      (accountLockoutService.getRemainingLockoutTime as jest.Mock).mockReturnValue(
-        0,
-      );
+      (
+        accountLockoutService.getRemainingLockoutTime as jest.Mock
+      ).mockReturnValue(0);
       (authService.validateUser as jest.Mock).mockResolvedValue(mockUser);
       (authService.login as jest.Mock).mockResolvedValue(mockLoginResponse);
 
@@ -135,9 +135,9 @@ describe('AuthController', () => {
           },
         },
       });
-      expect(accountLockoutService.getRemainingLockoutTime).toHaveBeenCalledWith(
-        loginDto.email,
-      );
+      expect(
+        accountLockoutService.getRemainingLockoutTime,
+      ).toHaveBeenCalledWith(loginDto.email);
       expect(authService.validateUser).toHaveBeenCalledWith(
         loginDto.email,
         loginDto.password,
@@ -150,9 +150,9 @@ describe('AuthController', () => {
 
     it('should throw UnauthorizedException when account is locked', async () => {
       const remainingTime = 30000; // 30 seconds remaining
-      (accountLockoutService.getRemainingLockoutTime as jest.Mock).mockReturnValue(
-        remainingTime,
-      );
+      (
+        accountLockoutService.getRemainingLockoutTime as jest.Mock
+      ).mockReturnValue(remainingTime);
 
       await expect(controller.login(loginDto)).rejects.toThrow(
         UnauthorizedException,
@@ -170,9 +170,9 @@ describe('AuthController', () => {
     });
 
     it('should record failed attempt and throw UnauthorizedException on invalid credentials', async () => {
-      (accountLockoutService.getRemainingLockoutTime as jest.Mock).mockReturnValue(
-        0,
-      );
+      (
+        accountLockoutService.getRemainingLockoutTime as jest.Mock
+      ).mockReturnValue(0);
       (authService.validateUser as jest.Mock).mockRejectedValue(
         new Error('Invalid credentials'),
       );
@@ -192,9 +192,9 @@ describe('AuthController', () => {
     });
 
     it('should record failed attempt when authService throws UnauthorizedException', async () => {
-      (accountLockoutService.getRemainingLockoutTime as jest.Mock).mockReturnValue(
-        0,
-      );
+      (
+        accountLockoutService.getRemainingLockoutTime as jest.Mock
+      ).mockReturnValue(0);
       const unauthorizedException = new UnauthorizedException(
         'Invalid credentials',
       );
@@ -213,9 +213,9 @@ describe('AuthController', () => {
     });
 
     it('should clear failed attempts on successful login', async () => {
-      (accountLockoutService.getRemainingLockoutTime as jest.Mock).mockReturnValue(
-        0,
-      );
+      (
+        accountLockoutService.getRemainingLockoutTime as jest.Mock
+      ).mockReturnValue(0);
       (authService.validateUser as jest.Mock).mockResolvedValue(mockUser);
       (authService.login as jest.Mock).mockResolvedValue(mockLoginResponse);
 
