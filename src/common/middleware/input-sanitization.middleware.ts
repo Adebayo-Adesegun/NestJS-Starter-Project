@@ -49,9 +49,7 @@ export class InputSanitizationMiddleware implements NestMiddleware {
       if (obj.length > this.maxArrayLength) {
         throw new BadRequestException({
           statusCode: 400,
-          message: [
-            `Array exceeds maximum length of ${this.maxArrayLength}`,
-          ],
+          message: [`Array exceeds maximum length of ${this.maxArrayLength}`],
         });
       }
       return obj.map((item) => this.sanitizeObject(item));
@@ -79,9 +77,7 @@ export class InputSanitizationMiddleware implements NestMiddleware {
     if (str.length > this.maxStringLength) {
       throw new BadRequestException({
         statusCode: 400,
-        message: [
-          `String exceeds maximum length of ${this.maxStringLength}`,
-        ],
+        message: [`String exceeds maximum length of ${this.maxStringLength}`],
       });
     }
 
