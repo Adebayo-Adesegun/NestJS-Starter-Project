@@ -26,7 +26,13 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
+      forbidNonWhitelisted: true, // Reject unknown properties
+      forbidUnknownValues: true, // Reject unknown objects
       errorHttpStatusCode: HttpStatus.BAD_REQUEST,
+      transformOptions: {
+        enableImplicitConversion: false, // Prevent implicit type conversion
+        strategy: 'excludeAll', // Only include properties decorated with @Expose
+      },
     }),
   );
   // Structured JSON logging
@@ -47,8 +53,32 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
-  // Security middleware
-  app.use(helmet());
+  // Security middleware - helmet with strict OWASP configuration
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+        },
+      },
+      hsts: {
+        maxAge: 31536000, // 1 year
+        includeSubDomains: true,
+        preload: true,
+      },
+      frameguard: {
+        action: 'deny',
+      },
+      noSniff: true,
+      referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin',
+      },
+      xssFilter: true,
+    }),
+  );
 
   // API Versioning via URI (v1)
   app.setGlobalPrefix('api/v1');

@@ -9,6 +9,8 @@ import { LocalStrategy } from '../guards/local/local.strategy';
 import { JwtStrategy } from '../guards/jwt/jwt.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolesPermission } from '../core/entities/roles-permission.entity';
+import { AccountLockoutService } from './account-lockout.service';
+import { User } from '../core/entities/user.entity';
 
 @Module({
   imports: [
@@ -24,10 +26,10 @@ import { RolesPermission } from '../core/entities/roles-permission.entity';
         },
       }),
     }),
-    TypeOrmModule.forFeature([RolesPermission]),
+    TypeOrmModule.forFeature([RolesPermission, User]),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
-  exports: [AuthService],
+  providers: [AuthService, LocalStrategy, JwtStrategy, AccountLockoutService],
+  exports: [AuthService, AccountLockoutService],
   controllers: [AuthController],
 })
 export class AuthModule {}

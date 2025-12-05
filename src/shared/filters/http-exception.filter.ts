@@ -4,11 +4,14 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { ErrorCodes, type ErrorResponseBody } from '../errors/error-codes';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
@@ -37,6 +40,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
       code = rb.code ?? (status === 400 ? ErrorCodes.VALIDATION_FAILED : code);
     }
 
+    // Log error details for debugging (but never expose in response)
+    if (status >= 500) {
+      this.logger.error(
+        `[${request.method}] ${request.url} - ${status}`,
+        exception instanceof Error
+          ? exception.stack
+          : JSON.stringify(exception),
+      );
+    } else {
+      this.logger.warn(`[${request.method}] ${request.url} - ${status}`);
+    }
+
+    // In production, don't expose internal error details
+    const isProduction = process.env.NODE_ENV === 'production';
+    const safeMessage =
+      status >= 500 && isProduction
+        ? 'An unexpected error occurred. Please contact support.'
+        : message;
+
     const errorBody: ErrorResponseBody = {
       success: false,
       statusCode: status,
@@ -44,7 +66,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       path: request.url,
       method: request.method,
       timestamp: new Date().toISOString(),
-      message,
+      message: safeMessage,
     };
 
     response.status(status).json(errorBody);

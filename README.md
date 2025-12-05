@@ -2,7 +2,6 @@
 
 [![Node](https://img.shields.io/badge/node-22.x-339933?logo=node.js&logoColor=white)](./package.json)
 [![CI](https://github.com/Adebayo-Adesegun/NestJS-Starter-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/Adebayo-Adesegun/NestJS-Starter-Project/actions/workflows/ci.yml)
-[//]: # (Codecov badge removed)
 
 Build production-grade APIs faster with NestJS 10, TypeORM, JWT auth, RBAC scaffolding, email, health/metrics, OpenAPI docs, and strong defaults for DX and security.
 

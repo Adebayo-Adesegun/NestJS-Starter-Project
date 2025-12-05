@@ -1,22 +1,36 @@
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  BadRequestException,
+  UnauthorizedException,
+  Get,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from '../guards/pulic-access.guard';
 import { RegisterDto } from '../user/dto/register.dto';
 import { UserService } from '../user/user.service';
 import { ApiBaseResponse } from '../core/interfaces/api-response.interface';
+import { LoginDto } from './dto/login.dto';
+import { AccountLockoutService } from './account-lockout.service';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
     private userService: UserService,
+    private accountLockoutService: AccountLockoutService,
   ) {}
 
   @Public()
   @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
   async register(
     @Body() registerDto: RegisterDto,
-  ): Promise<ApiBaseResponse<RegisterDto>> {
+  ): Promise<ApiBaseResponse<any>> {
     const [success, message, user] = await this.userService.create(registerDto);
     if (success) {
       return {
@@ -31,10 +45,81 @@ export class AuthController {
     });
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Public()
-  // @Get('profile')
-  // getProfile(@Request() req) {
-  //   return req.user;
-  // }
+  @Public()
+  @Post('login')
+  @ApiOperation({ summary: 'Login user' })
+  async login(
+    @Body() loginDto: LoginDto,
+  ): Promise<ApiBaseResponse<{ access_token: string; user: any }>> {
+    const { email } = loginDto;
+
+    try {
+      const user = await this.userService.findOne({ where: { email } });
+
+      if (!user) {
+        await this.accountLockoutService.recordFailedAttempt(email);
+        throw new UnauthorizedException({
+          code: 'AUTH_INVALID_CREDENTIALS',
+          message: 'Invalid email or password',
+        });
+      }
+
+      // Check if account is locked
+      if (this.accountLockoutService.isAccountLocked(user)) {
+        const remainingTime =
+          this.accountLockoutService.getRemainingLockoutTime(email);
+        throw new UnauthorizedException({
+          code: 'AUTH_ACCOUNT_LOCKED',
+          message: `Account is locked. Try again in ${Math.ceil(
+            remainingTime / 1000,
+          )} seconds`,
+        });
+      }
+
+      // Validate credentials
+      const validatedUser = await this.authService.validateUser(
+        email,
+        loginDto.password,
+      );
+
+      // Clear failed attempts on successful login
+      this.accountLockoutService.clearFailedAttempts(email);
+
+      const loginResponse = await this.authService.login(validatedUser);
+
+      return {
+        statusCode: 200,
+        message: ['Login successful'],
+        data: {
+          access_token: loginResponse.access_token,
+          user: {
+            id: loginResponse.id,
+            firstName: loginResponse.firstName,
+            lastName: loginResponse.lastName,
+          },
+        },
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      await this.accountLockoutService.recordFailedAttempt(email);
+      throw new UnauthorizedException({
+        code: 'AUTH_INVALID_CREDENTIALS',
+        message: 'Invalid email or password',
+      });
+    }
+  }
+
+  @Get('profile')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user profile' })
+  getProfile(@Request() req: any) {
+    return {
+      statusCode: 200,
+      message: ['Profile retrieved'],
+      data: req.user,
+    };
+  }
 }

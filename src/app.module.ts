@@ -1,5 +1,5 @@
 import config from './config/app.config';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { validate } from './config/env.validation';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -16,6 +16,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { SharedModule } from './shared/shared.module';
+import { CsrfMiddleware } from './shared/middleware/csrf.middleware';
+import { InputSanitizationMiddleware } from './shared/middleware/input-sanitization.middleware';
 
 @Module({
   imports: [
@@ -52,4 +54,8 @@ import { SharedModule } from './shared/shared.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(InputSanitizationMiddleware, CsrfMiddleware).forRoutes('*');
+  }
+}

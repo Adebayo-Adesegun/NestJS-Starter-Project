@@ -2,11 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
+import { AccountLockoutService } from './account-lockout.service';
 import { BadRequestException } from '@nestjs/common';
 
 describe('AuthController', () => {
   let controller: AuthController;
   let userService: UserService;
+  let accountLockoutService: AccountLockoutService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,11 +21,23 @@ describe('AuthController', () => {
             create: jest.fn(),
           },
         },
+        {
+          provide: AccountLockoutService,
+          useValue: {
+            recordFailedAttempt: jest.fn(),
+            clearFailedAttempts: jest.fn(),
+            isAccountLocked: jest.fn(),
+            getRemainingLockoutTime: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
     userService = module.get<UserService>(UserService);
+    accountLockoutService = module.get<AccountLockoutService>(
+      AccountLockoutService,
+    );
   });
 
   it('should be defined', () => {
@@ -34,7 +48,7 @@ describe('AuthController', () => {
     it('should return 201 with user on success', async () => {
       const dto = {
         email: 'john@example.com',
-        password: 'Passw0rd!',
+        password: 'Passw0rd!Test123',
         firstName: 'John',
         lastName: 'Doe',
       } as any;
