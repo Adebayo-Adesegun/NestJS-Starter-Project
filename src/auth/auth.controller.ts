@@ -51,39 +51,28 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
   ): Promise<ApiBaseResponse<{ access_token: string; user: any }>> {
-    const { email } = loginDto;
+    const { email, password } = loginDto;
+
+    // Check for existing lockout
+    const remainingTime =
+      this.accountLockoutService.getRemainingLockoutTime(email);
+    if (remainingTime > 0) {
+      throw new UnauthorizedException({
+        code: 'AUTH_ACCOUNT_LOCKED',
+        message: `Account is locked. Try again in ${Math.ceil(
+          remainingTime / 1000,
+        )} seconds`,
+      });
+    }
 
     try {
-      const user = await this.userService.findOne({ where: { email } });
-
-      if (!user) {
-        await this.accountLockoutService.recordFailedAttempt(email);
-        throw new UnauthorizedException({
-          code: 'AUTH_INVALID_CREDENTIALS',
-          message: 'Invalid email or password',
-        });
-      }
-
-      // Check if account is locked
-      if (this.accountLockoutService.isAccountLocked(user)) {
-        const remainingTime =
-          this.accountLockoutService.getRemainingLockoutTime(email);
-        throw new UnauthorizedException({
-          code: 'AUTH_ACCOUNT_LOCKED',
-          message: `Account is locked. Try again in ${Math.ceil(
-            remainingTime / 1000,
-          )} seconds`,
-        });
-      }
-
-      // Validate credentials
       const validatedUser = await this.authService.validateUser(
         email,
-        loginDto.password,
+        password,
       );
 
       // Clear failed attempts on successful login
-      this.accountLockoutService.clearFailedAttempts(email);
+      await this.accountLockoutService.clearFailedAttempts(email);
 
       const loginResponse = await this.authService.login(validatedUser);
 
@@ -100,10 +89,14 @@ export class AuthController {
         },
       };
     } catch (error) {
+      // If authService throws an UnauthorizedException, propagate it
       if (error instanceof UnauthorizedException) {
+        // Record failed attempt and rethrow
+        await this.accountLockoutService.recordFailedAttempt(email);
         throw error;
       }
 
+      // On validation failure, record a failed attempt and return a generic unauthorized
       await this.accountLockoutService.recordFailedAttempt(email);
       throw new UnauthorizedException({
         code: 'AUTH_INVALID_CREDENTIALS',
