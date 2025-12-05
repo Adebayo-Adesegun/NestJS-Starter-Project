@@ -15,9 +15,9 @@ import { MailerModule } from './mailer/mailer.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
-import { SharedModule } from './shared/shared.module';
-import { CsrfMiddleware } from './shared/middleware/csrf.middleware';
-import { InputSanitizationMiddleware } from './shared/middleware/input-sanitization.middleware';
+import { CommonModule } from './common/common.module';
+import { CsrfMiddleware } from './common/middleware/csrf.middleware';
+import { InputSanitizationMiddleware } from './common/middleware/input-sanitization.middleware';
 
 @Module({
   imports: [
@@ -34,7 +34,7 @@ import { InputSanitizationMiddleware } from './shared/middleware/input-sanitizat
       },
     ]),
     UtilityModule,
-    SharedModule,
+    CommonModule,
     AuthModule,
     UsersModule,
     AdminModule,

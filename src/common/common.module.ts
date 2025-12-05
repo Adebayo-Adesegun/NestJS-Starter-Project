@@ -6,4 +6,4 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
   providers: [HttpExceptionFilter],
   exports: [HttpExceptionFilter],
 })
-export class SharedModule {}
+export class CommonModule {}

@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ErrorCodes } from '../shared/errors/error-codes';
+import { ErrorCodes } from '../common/errors/error-codes';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../core/entities/user.entity';
 import { UserService } from '../user/user.service';

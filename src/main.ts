@@ -5,10 +5,10 @@ import { HttpStatus, ValidationPipe } from '@nestjs/common';
 import { useContainer } from 'class-validator';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
-import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import helmet from 'helmet';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ErrorResponseDto } from './shared/swagger/error-schema';
+import { ErrorResponseDto } from './common/swagger/error-schema';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
