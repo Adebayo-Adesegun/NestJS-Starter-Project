@@ -180,8 +180,9 @@ describe('AuthController', () => {
 
       const error = await controller.login(loginDto).catch((e) => e);
       expect(error.getResponse()).toEqual({
+        statusCode: 401,
+        message: [expect.stringContaining('Account is locked')],
         code: 'AUTH_ACCOUNT_LOCKED',
-        message: expect.stringContaining('Account is locked'),
       });
       expect(
         accountLockoutService.getRemainingLockoutTime,

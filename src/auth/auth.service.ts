@@ -37,16 +37,18 @@ export class AuthService {
     const user = await this.userService.findOne({ where: { email } });
     if (!user) {
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: ['Authentication failed'],
         code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
-        message: 'Authentication failed',
       });
     }
 
     const isPasswordValid = await user.checkPassword(password);
     if (!isPasswordValid) {
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: ['Authentication failed'],
         code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
-        message: 'Authentication failed',
       });
     }
 
@@ -153,8 +155,9 @@ export class AuthService {
         reason: 'invalid_token',
       });
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: ['Invalid or expired token'],
         code: ErrorCodes.AUTH_INVALID_TOKEN,
-        message: 'Invalid or expired token',
       });
     }
 
@@ -164,8 +167,9 @@ export class AuthService {
         reason: 'token_expired',
       });
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: ['Invalid or expired token'],
         code: ErrorCodes.AUTH_INVALID_TOKEN,
-        message: 'Invalid or expired token',
       });
     }
 
@@ -175,17 +179,19 @@ export class AuthService {
         reason: 'token_reused',
       });
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: ['Token has already been used'],
         code: ErrorCodes.AUTH_INVALID_TOKEN,
-        message: 'Token has already been used',
       });
     }
 
     // Enforce strong password server-side
     const validator = new StrongPasswordValidator();
     if (!validator.validate(newPassword)) {
-      throw new BadRequestException(
-        'New password does not meet strength requirements',
-      );
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ['New password does not meet strength requirements'],
+      });
     }
 
     const user = resetToken.user;
@@ -194,8 +200,9 @@ export class AuthService {
         reason: 'user_not_found',
       });
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: ['Invalid token'],
         code: ErrorCodes.AUTH_INVALID_TOKEN,
-        message: 'Invalid token',
       });
     }
 
@@ -231,8 +238,9 @@ export class AuthService {
         reason: 'user_not_found',
       });
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: ['Authentication failed'],
         code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
-        message: 'Authentication failed',
       });
     }
 
@@ -243,16 +251,18 @@ export class AuthService {
         reason: 'invalid_current_password',
       });
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: ['Current password is incorrect'],
         code: ErrorCodes.AUTH_INVALID_CREDENTIALS,
-        message: 'Current password is incorrect',
       });
     }
 
     const validator = new StrongPasswordValidator();
     if (!validator.validate(newPassword)) {
-      throw new BadRequestException(
-        'New password does not meet strength requirements',
-      );
+      throw new BadRequestException({
+        statusCode: 400,
+        message: ['New password does not meet strength requirements'],
+      });
     }
 
     await this.userService.updatePassword(user.id, newPassword);

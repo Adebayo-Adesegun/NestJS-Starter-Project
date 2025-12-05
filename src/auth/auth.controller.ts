@@ -55,8 +55,8 @@ export class AuthController {
       };
     }
     throw new BadRequestException({
-      message: [message],
       statusCode: 400,
+      message: [message],
     });
   }
 
@@ -73,10 +73,13 @@ export class AuthController {
       this.accountLockoutService.getRemainingLockoutTime(email);
     if (remainingTime > 0) {
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: [
+          `Account is locked. Try again in ${Math.ceil(
+            remainingTime / 1000,
+          )} seconds`,
+        ],
         code: 'AUTH_ACCOUNT_LOCKED',
-        message: `Account is locked. Try again in ${Math.ceil(
-          remainingTime / 1000,
-        )} seconds`,
       });
     }
 
@@ -114,8 +117,9 @@ export class AuthController {
       // On validation failure, record a failed attempt and return a generic unauthorized
       await this.accountLockoutService.recordFailedAttempt(email);
       throw new UnauthorizedException({
+        statusCode: 401,
+        message: ['Invalid email or password'],
         code: 'AUTH_INVALID_CREDENTIALS',
-        message: 'Invalid email or password',
       });
     }
   }
@@ -150,7 +154,10 @@ export class AuthController {
         'warn',
       );
       throw new HttpException(
-        'Too many password reset requests. Try again later.',
+        {
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          message: ['Too many password reset requests. Try again later.'],
+        },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
