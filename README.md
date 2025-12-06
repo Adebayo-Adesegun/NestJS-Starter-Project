@@ -361,7 +361,7 @@ curl -X POST http://localhost:9000/api/v1/auth/login \
 {
   "success": true,
   "data": {
-    "access_token": "eyJhbGci0iJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+    "access_token": "<JWT_TOKEN_HERE>",
     "user": {
       "id": 1,
       "email": "john@example.com",

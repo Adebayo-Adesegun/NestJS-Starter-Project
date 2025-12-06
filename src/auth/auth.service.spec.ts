@@ -216,7 +216,6 @@ describe('sendPasswordReset', () => {
       authService.sendPasswordReset('user@mail.com'),
     ).resolves.not.toThrow();
   });
-
 });
 describe('resetPassword', () => {
   let passwordResetTokenRepo: any;
