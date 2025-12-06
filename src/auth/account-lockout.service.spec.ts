@@ -128,4 +128,53 @@ describe('AccountLockoutService', () => {
       expect(result).toBeLessThanOrEqual(10 * 60 * 1000);
     });
   });
+
+  describe('isAccountLocked', () => {
+    it('should return false when user has no lock fields', () => {
+      const user = { id: 1, email: 'test@example.com' } as any;
+
+      const result = service.isAccountLocked(user);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when user is not locked', () => {
+      const user = {
+        id: 1,
+        email: 'test@example.com',
+        isLocked: false,
+        lockedUntil: null,
+      } as any;
+
+      const result = service.isAccountLocked(user);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when lock has expired', () => {
+      const user = {
+        id: 1,
+        email: 'test@example.com',
+        isLocked: true,
+        lockedUntil: new Date(Date.now() - 1000),
+      } as any;
+
+      const result = service.isAccountLocked(user);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return true when account is locked and not expired', () => {
+      const user = {
+        id: 1,
+        email: 'test@example.com',
+        isLocked: true,
+        lockedUntil: new Date(Date.now() + 10000),
+      } as any;
+
+      const result = service.isAccountLocked(user);
+
+      expect(result).toBe(true);
+    });
+  });
 });
