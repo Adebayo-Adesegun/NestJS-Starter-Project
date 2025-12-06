@@ -361,7 +361,7 @@ curl -X POST http://localhost:9000/api/v1/auth/login \
 {
   "success": true,
   "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "access_token": "eyJhbGci0iJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
     "user": {
       "id": 1,
       "email": "john@example.com",
@@ -377,7 +377,7 @@ Include the token in the `Authorization` header for protected routes:
 
 ```bash
 curl -X GET http://localhost:9000/api/v1/users/profile \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "Authorization: Bearer <your_token_here>"
 ```
 
 ---
@@ -388,7 +388,7 @@ curl -X GET http://localhost:9000/api/v1/users/profile \
 
 ```bash
 curl -X POST http://localhost:9000/api/v1/mail/send \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer <your_token_here>" \
   -H "Content-Type: application/json" \
   -d '{
     "to": "recipient@example.com",
@@ -943,13 +943,14 @@ DATABASE_PASSWORD=your_password
 **Cause:** Missing or invalid JWT token
 
 **Solution:**
+
 ```bash
 # Login first to get token
 curl -X POST http://localhost:9000/api/v1/auth/login \
   -d '{"username":"your@email.com","password":"yourpass"}'
 
 # Use the token in subsequent requests
-curl -H "Authorization: Bearer YOUR_TOKEN" \
+curl -H "Authorization: Bearer <your_token_here>" \
   http://localhost:9000/api/v1/users/profile
 ```
 </details>
