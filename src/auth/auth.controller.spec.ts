@@ -263,5 +263,36 @@ describe('AuthController', () => {
         loginDto.email,
       );
     });
+
+    it('should throw error when account has remaining lockout time', async () => {
+      const loginDto = { email: 'test@example.com', password: 'password' };
+      jest
+        .spyOn(accountLockoutService, 'getRemainingLockoutTime')
+        .mockReturnValue(300000); // 5 minutes
+
+      await expect(controller.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(
+        accountLockoutService.getRemainingLockoutTime,
+      ).toHaveBeenCalledWith(loginDto.email);
+    });
+
+    it('should handle non-UnauthorizedException errors in login', async () => {
+      const loginDto = { email: 'test@example.com', password: 'password' };
+      jest
+        .spyOn(accountLockoutService, 'getRemainingLockoutTime')
+        .mockReturnValue(0);
+      jest
+        .spyOn(authService, 'validateUser')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(controller.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(accountLockoutService.recordFailedAttempt).toHaveBeenCalledWith(
+        loginDto.email,
+      );
+    });
   });
 });

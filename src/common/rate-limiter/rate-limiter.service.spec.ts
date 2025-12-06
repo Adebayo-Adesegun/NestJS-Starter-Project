@@ -42,6 +42,9 @@ describe('RateLimiterService', () => {
     }).compile();
 
     service = module.get<RateLimiterService>(RateLimiterService);
+
+    // Suppress logger errors in tests
+    jest.spyOn(service['logger'], 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {

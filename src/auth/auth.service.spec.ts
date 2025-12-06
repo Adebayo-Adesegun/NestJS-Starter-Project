@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException, Logger } from '@nestjs/common';
 import { AuditLoggerService } from '../common/audit/audit-logger.service';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '../mailer/mailer.service';
@@ -153,9 +153,16 @@ describe('login', () => {
 
 describe('sendPasswordReset', () => {
   let passwordResetTokenRepo: any;
+  let loggerErrorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     passwordResetTokenRepo = authService['passwordResetTokenRepository'];
+    // Suppress Logger.error in tests
+    loggerErrorSpy = jest.spyOn(Logger, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    loggerErrorSpy.mockRestore();
   });
 
   it('should not reveal when user does not exist', async () => {
@@ -172,7 +179,7 @@ describe('sendPasswordReset', () => {
     const mockUser = { id: 1, email: 'user@mail.com', firstName: 'John' };
     const configService = authService['configService'];
     const mailService = authService['mailService'];
-    
+
     jest.spyOn(userServiceMock, 'findOne').mockResolvedValue(mockUser as any);
     jest.spyOn(passwordResetTokenRepo, 'delete').mockResolvedValue({});
     jest.spyOn(passwordResetTokenRepo, 'create').mockReturnValue({});
@@ -198,7 +205,7 @@ describe('sendPasswordReset', () => {
   it('should handle email sending failure gracefully', async () => {
     const mockUser = { id: 1, email: 'user@mail.com', firstName: 'John' };
     const mailService = authService['mailService'];
-    
+
     jest.spyOn(userServiceMock, 'findOne').mockResolvedValue(mockUser as any);
     jest.spyOn(passwordResetTokenRepo, 'delete').mockResolvedValue({});
     jest.spyOn(passwordResetTokenRepo, 'create').mockReturnValue({});
@@ -209,8 +216,8 @@ describe('sendPasswordReset', () => {
       authService.sendPasswordReset('user@mail.com'),
     ).resolves.not.toThrow();
   });
-});
 
+});
 describe('resetPassword', () => {
   let passwordResetTokenRepo: any;
 
@@ -259,9 +266,7 @@ describe('resetPassword', () => {
       used: false,
       user: { id: 1 },
     };
-    jest
-      .spyOn(passwordResetTokenRepo, 'findOne')
-      .mockResolvedValue(validToken);
+    jest.spyOn(passwordResetTokenRepo, 'findOne').mockResolvedValue(validToken);
 
     await expect(
       authService.resetPassword('valid-token', 'weak'),
@@ -289,9 +294,7 @@ describe('resetPassword', () => {
       used: false,
       user: { id: 1, email: 'user@mail.com' },
     };
-    jest
-      .spyOn(passwordResetTokenRepo, 'findOne')
-      .mockResolvedValue(validToken);
+    jest.spyOn(passwordResetTokenRepo, 'findOne').mockResolvedValue(validToken);
     jest.spyOn(userServiceMock, 'updatePassword').mockResolvedValue(undefined);
     jest.spyOn(passwordResetTokenRepo, 'save').mockResolvedValue({});
 
