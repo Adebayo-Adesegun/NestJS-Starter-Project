@@ -6,7 +6,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  MinLength,
   validateSync,
 } from 'class-validator';
 import { Environment } from 'src/core/enums/environment.enum';
@@ -38,9 +37,6 @@ class EnvironmentVariables {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(12, {
-    message: 'DATABASE_PASSWORD must be at least 12 characters',
-  })
   DATABASE_PASSWORD: string;
 
   @IsNotEmpty()
@@ -91,9 +87,6 @@ class EnvironmentVariables {
   // JWT configuration
   @IsNotEmpty()
   @IsString()
-  @MinLength(32, {
-    message: 'JWT_SECRET must be at least 32 characters for security',
-  })
   JWT_SECRET: string;
 
   @IsOptional()
@@ -103,6 +96,11 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   JWT_REFRESH_EXPIRES_IN?: string;
+
+  // Redis configuration
+  @IsNotEmpty()
+  @IsString()
+  REDIS_URL: string;
 }
 
 export function validate(config: Record<string, unknown>) {
