@@ -110,3 +110,49 @@ describe('find a user', () => {
     userRespositoryFindOneSpy.mockReset();
   });
 });
+
+describe('updatePassword', () => {
+  it('should update user password and set passwordChangedAt', async () => {
+    const userId = 1;
+    const newPassword = 'NewPassword123!';
+    const mockUser = {
+      id: userId,
+      password: 'OldPassword',
+      passwordChangedAt: null,
+    } as User;
+
+    const findOneSpy = jest
+      .spyOn(userRepository, 'findOne')
+      .mockResolvedValue(mockUser);
+    const saveSpy = jest
+      .spyOn(userRepository, 'save')
+      .mockResolvedValue(mockUser);
+
+    await userService.updatePassword(userId, newPassword);
+
+    expect(findOneSpy).toHaveBeenCalledWith({
+      where: { id: userId },
+    });
+    expect(mockUser.password).toBe(newPassword);
+    expect(mockUser.passwordChangedAt).toBeInstanceOf(Date);
+    expect(saveSpy).toHaveBeenCalledWith(mockUser);
+
+    findOneSpy.mockReset();
+    saveSpy.mockReset();
+  });
+
+  it('should throw error if user not found', async () => {
+    const userId = 999;
+    const newPassword = 'NewPassword123!';
+
+    const findOneSpy = jest
+      .spyOn(userRepository, 'findOne')
+      .mockResolvedValue(null);
+
+    await expect(
+      userService.updatePassword(userId, newPassword),
+    ).rejects.toThrow('User not found');
+
+    findOneSpy.mockReset();
+  });
+});
