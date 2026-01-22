@@ -68,39 +68,6 @@ describe('UtilityService', () => {
     });
   });
 
-  describe('date helpers', () => {
-    const onlyDate = (d: Date) =>
-      new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString();
-
-    it('computes first/last dates correctly relative to now', () => {
-      const firstLastMonth = service.getFirstDateOfLastMonth();
-      const lastLastMonth = service.getLastDateOfLastMonth();
-      const firstThisMonth = service.getFirstDateOfCurrentMonth();
-      const lastThisMonth = service.getLastDateOfCurrentMonth();
-
-      // Recompute expected values using the same logic
-      const now = new Date();
-      const expectedFirstLastMonth = new Date(now);
-      expectedFirstLastMonth.setDate(1);
-      expectedFirstLastMonth.setMonth(expectedFirstLastMonth.getMonth() - 1);
-
-      const expectedLastLastMonth = new Date(now);
-      expectedLastLastMonth.setDate(0);
-
-      const expectedFirstThisMonth = new Date(now);
-      expectedFirstThisMonth.setDate(1);
-
-      const expectedLastThisMonth = new Date(expectedFirstThisMonth);
-      expectedLastThisMonth.setMonth(expectedLastThisMonth.getMonth() + 1);
-      expectedLastThisMonth.setDate(0);
-
-      expect(onlyDate(firstLastMonth)).toBe(onlyDate(expectedFirstLastMonth));
-      expect(onlyDate(lastLastMonth)).toBe(onlyDate(expectedLastLastMonth));
-      expect(onlyDate(firstThisMonth)).toBe(onlyDate(expectedFirstThisMonth));
-      expect(onlyDate(lastThisMonth)).toBe(onlyDate(expectedLastThisMonth));
-    });
-  });
-
   describe('uploadToS3', () => {
     it('uploads and returns the file URL', async () => {
       sendMock.mockResolvedValue({});

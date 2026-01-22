@@ -24,10 +24,13 @@ const databaseConfig: DataSourceOptions & TypeOrmModuleOptions = {
   maxQueryExecutionTime: 5000, // Log queries taking longer than 5 seconds
   migrationsRun: false,
   // Enable connection pooling for better performance
+  // Force all database connections to use UTC timezone
   extra: {
     max: 20, // Maximum number of connections in the pool
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
+    // Set timezone to UTC for all connections
+    timezone: 'UTC',
   },
 };
 

@@ -43,9 +43,10 @@ export class User extends BaseEntity {
   isPhoneNumberVerified: boolean;
 
   @Column({
-    type: 'timestamp',
+    type: 'timestamp with time zone',
     name: 'phone_number_verified_at',
     nullable: true,
+    comment: 'Phone verification timestamp (UTC)',
   })
   phoneNumberVerifiedAt: Date;
 
@@ -58,9 +59,10 @@ export class User extends BaseEntity {
   isEmailVerified: boolean;
 
   @Column({
-    type: 'timestamp',
+    type: 'timestamp with time zone',
     name: 'email_verified_at',
     nullable: true,
+    comment: 'Email verification timestamp (UTC)',
   })
   emailVerifiedAt: Date;
 
@@ -75,13 +77,19 @@ export class User extends BaseEntity {
   })
   acceptTos: boolean;
 
-  @Column({ type: 'timestamp', name: 'last_login', nullable: true })
+  @Column({
+    type: 'timestamp with time zone',
+    name: 'last_login',
+    nullable: true,
+    comment: 'Last login timestamp (UTC)',
+  })
   lastLogin: Date;
 
   @Column({
-    type: 'timestamp',
+    type: 'timestamp with time zone',
     name: 'password_changed_at',
     nullable: true,
+    comment: 'Password last changed timestamp (UTC)',
   })
   passwordChangedAt: Date;
 

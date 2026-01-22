@@ -6,6 +6,7 @@ import { useContainer } from 'class-validator';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { DateTransformInterceptor } from './common/date/date-transform.interceptor';
 import helmet from 'helmet';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ErrorResponseDto } from './common/swagger/error-schema';
@@ -53,6 +54,11 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Global date transformation interceptor
+  // Ensures all Date objects are converted to ISO 8601 UTC strings in responses
+  app.useGlobalInterceptors(new DateTransformInterceptor());
+
   // Security middleware - helmet with strict OWASP configuration
   app.use(
     helmet({

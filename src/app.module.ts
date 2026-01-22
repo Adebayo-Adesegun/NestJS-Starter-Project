@@ -16,6 +16,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { CommonModule } from './common/common.module';
+import { DateModule } from './common/date/date.module';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { InputSanitizationMiddleware } from './common/middleware/input-sanitization.middleware';
 
@@ -35,6 +36,7 @@ import { InputSanitizationMiddleware } from './common/middleware/input-sanitizat
     ]),
     UtilityModule,
     CommonModule,
+    DateModule,
     AuthModule,
     UsersModule,
     AdminModule,

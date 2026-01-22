@@ -3,6 +3,12 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { s3Config } from '../config/aws.config';
 import { ConfigService } from '@nestjs/config';
 
+/**
+ * UtilityService
+ * 
+ * NOTE: For date operations, use DateUtilityService from common/date
+ * which provides UTC-safe date operations.
+ */
 @Injectable()
 export class UtilityService {
   constructor(private readonly configService: ConfigService) {}
@@ -31,31 +37,6 @@ export class UtilityService {
     const randomNumber = Math.floor(min + Math.random() * (max - min + 1));
 
     return randomNumber.toString();
-  }
-
-  getFirstDateOfLastMonth(): Date {
-    const date = new Date();
-    date.setDate(1);
-    date.setMonth(date.getMonth() - 1);
-    return date;
-  }
-
-  getLastDateOfLastMonth(): Date {
-    const date = new Date();
-    date.setDate(0);
-    return date;
-  }
-  getFirstDateOfCurrentMonth(): Date {
-    const date = new Date();
-    date.setDate(1);
-    return date;
-  }
-
-  getLastDateOfCurrentMonth(): Date {
-    const firstDateOfNextMonth = this.getFirstDateOfCurrentMonth();
-    firstDateOfNextMonth.setMonth(firstDateOfNextMonth.getMonth() + 1);
-    firstDateOfNextMonth.setDate(0);
-    return firstDateOfNextMonth;
   }
 
   async uploadToS3(file: Express.Multer.File): Promise<string> {
