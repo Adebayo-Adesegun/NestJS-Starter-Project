@@ -33,7 +33,10 @@ export class PasswordResetToken {
   })
   tokenHash: string;
 
-  @Column({ type: 'timestamp', comment: 'When this token expires' })
+  @Column({
+    type: 'timestamp with time zone',
+    comment: 'When this token expires (UTC)',
+  })
   expiresAt: Date;
 
   @Column({
@@ -43,9 +46,17 @@ export class PasswordResetToken {
   })
   used: boolean;
 
-  @Column({ type: 'timestamp', nullable: true, comment: 'When token was used' })
+  @Column({
+    type: 'timestamp with time zone',
+    nullable: true,
+    comment: 'When token was used (UTC)',
+  })
   usedAt: Date;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  @CreateDateColumn({
+    type: 'timestamp with time zone',
+    name: 'created_at',
+    comment: 'Token creation timestamp (UTC)',
+  })
   createdAt: Date;
 }

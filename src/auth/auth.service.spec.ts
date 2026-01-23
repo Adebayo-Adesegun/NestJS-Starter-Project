@@ -6,6 +6,7 @@ import { UnauthorizedException, Logger } from '@nestjs/common';
 import { AuditLoggerService } from '../common/audit/audit-logger.service';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '../mailer/mailer.service';
+import { DateUtilityService } from '../common/date/date-utility.service';
 
 let authService: AuthService;
 let userServiceMock: UserService;
@@ -52,6 +53,7 @@ beforeAll(async () => {
           log: jest.fn(),
         },
       },
+      DateUtilityService,
       {
         provide: ConfigService,
         useValue: {

@@ -6,6 +6,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { RolesPermission } from '../core/entities/roles-permission.entity';
 import { PasswordResetToken } from '../core/entities/password-reset-token.entity';
 import { AuditLoggerService } from '../common/audit/audit-logger.service';
+import { DateUtilityService } from '../common/date/date-utility.service';
+import { ConfigService } from '@nestjs/config';
+import { MailService } from '../mailer/mailer.service';
 
 describe('AuthService - getPermissionsByRole', () => {
   let service: AuthService;
@@ -43,6 +46,19 @@ describe('AuthService - getPermissionsByRole', () => {
           provide: AuditLoggerService,
           useValue: {
             log: jest.fn(),
+          },
+        },
+        DateUtilityService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn(),
+          },
+        },
+        {
+          provide: MailService,
+          useValue: {
+            send: jest.fn(),
           },
         },
       ],

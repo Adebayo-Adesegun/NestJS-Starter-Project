@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../core/entities/user.entity';
+import { DateUtilityService } from '../common/date/date-utility.service';
 
 /**
  * Account Lockout Service
@@ -9,6 +10,7 @@ import { User } from '../core/entities/user.entity';
  * - Tracks failed login attempts
  * - Locks account after max failed attempts
  * - Implements exponential backoff for lockout duration
+ * - Uses UTC timestamps for all date operations
  */
 @Injectable()
 export class AccountLockoutService {
@@ -28,6 +30,7 @@ export class AccountLockoutService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly dateUtility: DateUtilityService,
   ) {}
 
   /**
@@ -36,7 +39,7 @@ export class AccountLockoutService {
    * @returns boolean indicating if account should be locked
    */
   async recordFailedAttempt(email: string): Promise<boolean> {
-    const now = Date.now();
+    const now = this.dateUtility.getUnixTimestamp();
     const attempt = this.failedAttempts.get(email);
 
     if (!attempt) {
@@ -93,14 +96,14 @@ export class AccountLockoutService {
       return false;
     }
 
-    // Check if lockout period has expired
-    const now = new Date();
-    if (lockedUntil && new Date(lockedUntil) > now) {
+    // Check if lockout period has expired (UTC comparison)
+    const now = this.dateUtility.getCurrentUTCDate();
+    if (lockedUntil && lockedUntil > now) {
       return true;
     }
 
     // Unlock if lockout period has expired
-    if (lockedUntil && new Date(lockedUntil) <= now) {
+    if (lockedUntil && lockedUntil <= now) {
       this.unlockAccount(user.email).catch((err) => {
         this.logger.error(`Failed to unlock account: ${err.message}`);
       });
@@ -110,7 +113,7 @@ export class AccountLockoutService {
   }
 
   /**
-   * Lock account for brute-force protection
+   * Lock account for brute-force protection (UTC timestamp)
    * @param email User email
    */
   private async lockAccount(email: string): Promise<void> {
@@ -120,7 +123,11 @@ export class AccountLockoutService {
       return;
     }
 
-    const lockedUntil = new Date(Date.now() + this.lockoutDurationMs);
+    // Calculate lockout expiry using UTC
+    const lockedUntil = this.dateUtility.addMinutes(
+      this.dateUtility.getCurrentUTCDate(),
+      this.lockoutDurationMs / 60000, // Convert ms to minutes
+    );
 
     // You'll need to add isLocked and lockedUntil fields to User entity
     if ('isLocked' in user && 'lockedUntil' in user) {
@@ -157,7 +164,7 @@ export class AccountLockoutService {
   getRemainingLockoutTime(email: string): number {
     const user = this.failedAttempts.get(email);
 
-    if (!user) {
+    if (!user) {this.dateUtility.getUnixTimestamp
       return 0;
     }
 

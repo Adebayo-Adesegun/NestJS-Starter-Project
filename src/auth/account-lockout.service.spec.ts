@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../core/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
+import { DateUtilityService } from '../common/date/date-utility.service';
 
 describe('AccountLockoutService', () => {
   let service: AccountLockoutService;
@@ -22,6 +23,7 @@ describe('AccountLockoutService', () => {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
         },
+        DateUtilityService,
         {
           provide: ConfigService,
           useValue: {

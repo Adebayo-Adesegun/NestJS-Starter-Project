@@ -17,6 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import { StrongPasswordValidator } from '../user/validator/strong-password.validator';
 import { PasswordResetToken } from '../core/entities/password-reset-token.entity';
 import { AuditLoggerService } from '../common/audit/audit-logger.service';
+import { DateUtilityService } from '../common/date/date-utility.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -29,6 +30,7 @@ export class AuthService {
     @InjectRepository(PasswordResetToken)
     private readonly passwordResetTokenRepository: Repository<PasswordResetToken>,
     private readonly auditLogger: AuditLoggerService,
+    private readonly dateUtility: DateUtilityService,
     @Optional() private readonly mailService?: MailService,
     @Optional() private readonly configService?: ConfigService,
   ) {}
@@ -100,7 +102,10 @@ export class AuthService {
       parseInt(
         this.configService?.get<string>('PASSWORD_RESET_EXPIRES_IN') || '60',
       ) || 60;
-    const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000);
+    
+    // Use DateUtilityService for UTC-safe date operations
+    const now = this.dateUtility.getCurrentUTCDate();
+    const expiresAt = this.dateUtility.addMinutes(now, expiresInMinutes);
 
     // Delete any prior unused tokens for this user
     await this.passwordResetTokenRepository.delete({
@@ -161,8 +166,9 @@ export class AuthService {
       });
     }
 
-    // Check if token is expired
-    if (resetToken.expiresAt < new Date()) {
+    // Check if token is expired (UTC comparison)
+    const now = this.dateUtility.getCurrentUTCDate();
+    if (this.dateUtility.isPast(resetToken.expiresAt)) {
       this.auditLogger.log('PASSWORD_RESET_FAILURE', {
         reason: 'token_expired',
       });
@@ -209,9 +215,9 @@ export class AuthService {
     // Update password and set passwordChangedAt
     await this.userService.updatePassword(user.id, newPassword);
 
-    // Mark token as used
+    // Mark token as used (UTC timestamp)
     resetToken.used = true;
-    resetToken.usedAt = new Date();
+    resetToken.usedAt = this.dateUtility.getCurrentUTCDate();
     await this.passwordResetTokenRepository.save(resetToken);
 
     // Log successful password reset

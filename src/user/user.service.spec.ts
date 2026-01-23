@@ -5,6 +5,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../core/entities/user.entity';
 import { Repository } from 'typeorm';
 import { RegisterDto } from './dto/register.dto';
+import { DateUtilityService } from '../common/date/date-utility.service';
 
 export class UserRepositoryFake {
   public create(): void {}
@@ -15,6 +16,7 @@ export class UserRepositoryFake {
 
 let userService: UserService;
 let userRepository: Repository<User>;
+let dateUtility: DateUtilityService;
 let user: User;
 
 beforeAll(async () => {
@@ -25,6 +27,7 @@ beforeAll(async () => {
         provide: getRepositoryToken(User),
         useClass: UserRepositoryFake,
       },
+      DateUtilityService,
       IsUserEmailAlreadyExist,
     ],
   }).compile();
@@ -38,6 +41,7 @@ beforeAll(async () => {
   } as User;
   userService = module.get<UserService>(UserService);
   userRepository = module.get(getRepositoryToken(User));
+  dateUtility = module.get<DateUtilityService>(DateUtilityService);
 });
 
 describe('create a user', () => {

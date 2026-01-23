@@ -4,12 +4,14 @@ import { User } from '../core/entities/user.entity';
 import { FindOneOptions, Repository } from 'typeorm';
 import { RegisterDto } from './dto/register.dto';
 import { CountryCode, parsePhoneNumber } from 'libphonenumber-js';
+import { DateUtilityService } from '../common/date/date-utility.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly dateUtility: DateUtilityService,
   ) {}
 
   async findOne(where: FindOneOptions<User>): Promise<User | null> {
@@ -62,7 +64,7 @@ export class UserService {
       throw new Error('User not found');
     }
     user.password = newPassword;
-    user.passwordChangedAt = new Date();
+    user.passwordChangedAt = this.dateUtility.getCurrentUTCDate();
     await this.userRepository.save(user);
   }
 }
